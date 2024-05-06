@@ -6,5 +6,8 @@ using UnityEngine;
 public class ObjectiveData : ScriptableObject
 {
     public string objectiveName;
+    public string objectiveDescription;
+    public ObjectiveState objectiveState;
+
 
 }

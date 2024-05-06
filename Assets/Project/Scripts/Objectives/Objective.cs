@@ -5,8 +5,7 @@ using UnityEngine;
 public enum ObjectiveState { Uncomplete, InProgress, Complete, Failed }
 public class Objective : MonoBehaviour
 {
-    public string objectiveName;
-    public ObjectiveState ObjectiveState { get; private set; }
+    public ObjectiveData objectiveData;
 
     public virtual void Awake()
     {
@@ -32,9 +31,9 @@ public class Objective : MonoBehaviour
 
     public void ChangeObjectiveState(ObjectiveState newObjectiveState)
     {
-        ObjectiveState = newObjectiveState;
+        objectiveData.objectiveState = newObjectiveState;
 
-        switch (ObjectiveState)
+        switch (objectiveData.objectiveState)
         {
             case ObjectiveState.Uncomplete:
                 break;

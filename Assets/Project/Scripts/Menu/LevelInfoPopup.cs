@@ -21,6 +21,21 @@ public class LevelInfoPopup : MonoBehaviour
         levelObjectivesText.text = string.Empty;
 
         foreach (ObjectiveData objectiveData in currentLevelData.levelObjectives)
-            levelObjectivesText.text += "- " + objectiveData.objectiveName + "\n";
+            levelObjectivesText.text += "- " + GetObjectiveString(objectiveData) + "\n";
+    }
+
+    public void UnloadPopup()
+    {
+        popupAnimator.SetBool("IsEnabled", false);
+    }
+
+    public string GetObjectiveString(ObjectiveData objectiveData)
+    {
+        string returnString = objectiveData.objectiveDescription;
+
+        if (objectiveData.objectiveState == ObjectiveState.Uncomplete)
+            return (("<s>" + returnString.Colorize(Color.yellow) + "</s>").ToItalic());
+        else
+            return (returnString);
     }
 }
