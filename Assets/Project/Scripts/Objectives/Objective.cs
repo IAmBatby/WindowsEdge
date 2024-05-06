@@ -9,7 +9,8 @@ public class Objective : MonoBehaviour
 
     public virtual void Awake()
     {
-        StartObjective();
+        objectiveData = GameManager.Instance.currentLevel.GetObjectiveData(objectiveData);
+        //StartObjective();
     }
 
 
@@ -17,6 +18,11 @@ public class Objective : MonoBehaviour
     {
         ChangeObjectiveState(ObjectiveState.InProgress);
         OnObjectiveStart();
+    }
+
+    public void StartObjective(ObjectivePosition _)
+    {
+        StartObjective();
     }
 
     public void EndObjective(bool successValue)

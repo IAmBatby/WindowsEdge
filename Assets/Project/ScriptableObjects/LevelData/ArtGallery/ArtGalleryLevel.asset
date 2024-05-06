@@ -10,11 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6b1b72a09231d8a4483e53e60b553c28, type: 3}
-  m_Name: SuburbsLevel
+  m_Name: ArtGalleryLevel
   m_EditorClassIdentifier: 
-  levelName: Suburbs
-  sceneName: SuburbsScene
+  levelName: Art Gallery
+  sceneName: ArtGalleryScene
   levelObjectives:
+  - {fileID: 11400000, guid: d20df03535e8e39408f2fc68b21f0553, type: 2}
+  - {fileID: 11400000, guid: 19e0c598de65db84998c5753e62df784, type: 2}
   - {fileID: 11400000, guid: 3f4bfbefef8f579489d34a395ffa41ce, type: 2}
   - {fileID: 11400000, guid: 367606189a09b7d4db22b20d29e11a17, type: 2}
   - {fileID: 11400000, guid: e887eb6048aa5914a9643dbdff1562f6, type: 2}
+  currentLevelObjectives:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}

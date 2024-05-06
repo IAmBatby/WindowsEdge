@@ -17,13 +17,17 @@ public class MenuManager : MonoBehaviour
         }
     }
 
-    public LevelInfoPopup levelInfoPopup;
+    public LevelInfoPopup levelSelectLevelInfoPopup;
+    public LevelInfoPopup gameplayLevelSelectInfoPopup;
     public List<LevelHover> levelHovers = new List<LevelHover>();
     public LevelHover activeHover;
 
     public List<Transform> menuParents = new List<Transform>();
     public Transform activeMenuParent;
     public PlayButton playButton;
+
+    public Transform gameplayPlayMenuParent;
+    public Transform gameplayPauseMenuParent;
 
     public Material skyboxMaterial;
 
@@ -44,7 +48,7 @@ public class MenuManager : MonoBehaviour
                 activeHover = hover;
         currentSelectedLevel = levelData;
         playButton.Refresh();
-        levelInfoPopup.LoadPopup(levelData);
+        levelSelectLevelInfoPopup.LoadPopup(levelData);
     }
 
     public void ToggleActiveMenu(GameObject gameObject)

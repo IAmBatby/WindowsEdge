@@ -15,6 +15,6 @@ EditorBuildSettings:
     path: Assets/Project/Scenes/Levels/RooftopsScene.unity
     guid: 74e9c84b2e62e834c91d83f446819dc1
   - enabled: 1
-    path: Assets/Project/Scenes/Levels/SuburbsScene.unity
+    path: Assets/Project/Scenes/Levels/ArtGalleryScene.unity
     guid: 4941f7c376ab7bc4cbd01d94a65c3d90
   m_configObjects: {}
