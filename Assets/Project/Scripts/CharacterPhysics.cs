@@ -77,7 +77,7 @@ namespace BBB
             return Vector3.zero;
         }
 
-        static Vector3 Limit(float deltaTime, float accelerationStrength, float toTargetMagnitude, Vector3 nextVelocity, float nextSpeed, float maxSpeed, float absoluteMaxSpeed, float limitPullStrength, float overSpeedScaleStrength)
+        public static Vector3 Limit(float deltaTime, float accelerationStrength, float toTargetMagnitude, Vector3 nextVelocity, float nextSpeed, float maxSpeed, float absoluteMaxSpeed, float limitPullStrength, float overSpeedScaleStrength)
         {
             // Trying to go faster than the limit
 
@@ -98,6 +98,39 @@ namespace BBB
 
             // return negative direction * strength of decceleration
             return -targetVelDir * deccelerationFactor;
+        }
+
+        // heading is normalised velocity
+        // speed is velocity magnitude
+        // max is the max magnitude.
+        // returns the negative force to clamp the velocity to the limit.
+        public static Vector3 SimpleLimit(Vector3 heading, float speed, float max)
+        {
+            if (speed > max)
+            {
+                return -heading * (speed - max);
+            }
+
+            return Vector3.zero;
+        }
+
+        // desired is normalised input direction.
+        // heading is normalised velocity
+        // speed is velocity magnitude
+        // max is the max magnitude.
+        // returns the a scalar that can be applied to the input acceleration to limit the player's input while moving faster than max.
+        public static float SimpleDirectionConstraint(Vector3 desired, Vector3 heading, float speed, float max)
+        {
+            if (speed > max)
+            {
+                var dot = Vector3.Dot(heading, -desired);
+
+                dot = (dot + 1) / 2;
+
+                return dot;
+            }
+
+            return 1.0f;
         }
 
         public static float CalculateJumpForce(float jumpHeight, float gravity)

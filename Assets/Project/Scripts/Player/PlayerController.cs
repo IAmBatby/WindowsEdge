@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static UnityEditor.PlayerSettings;
+using UnityEngine.UIElements.Experimental;
 
 public class PlayerController : MonoBehaviour
 {
@@ -16,14 +18,21 @@ public class PlayerController : MonoBehaviour
     [SerializeField] float m_gravityScale = 1.0f;
 
     Vector3 m_velocity = Vector3.zero;
-    Vector3 m_forceAccumulator = Vector3.zero;
-    Vector3 m_impulseAccumulator = Vector3.zero;
-
     float m_currentSpeed = 0.0f;
     Vector3 m_heading = Vector3.forward;
 
+    Vector3 m_lateralVelocity = Vector3.zero;
+    float m_lateralSpeed = 0.0f;
+    Vector3 m_lateralHeading = Vector3.forward;
+
+    Vector3 m_forceAccumulator = Vector3.zero;
+    Vector3 m_impulseAccumulator = Vector3.zero;
+
     bool m_isGrounded = false;
     bool m_isJumping = false;
+
+    [SerializeField] float m_overSpeedScale = 1.0f;
+    [SerializeField] float m_limitPullStrength = 1.0f;
 
     [Header("GroundChecking")]
     [SerializeField] float m_groundRayLength = 0.1f;
@@ -33,10 +42,45 @@ public class PlayerController : MonoBehaviour
     [Header("Inputs")]
     Vector3 m_moveInput = Vector3.zero;
 
+    [System.Serializable]
+    struct DebugFloat
+    {
+        public string name;
+        public float value;
+
+        public DebugFloat(string name, float value)
+        {
+            this.name = name;
+            this.value = value;
+        }
+    }
+
+    [System.Serializable]
+    struct DebugVector3
+    {
+        public string name;
+        public Vector3 value;
+
+        public DebugVector3(string name, Vector3 value)
+        {
+            this.name = name;
+            this.value = value;
+        }
+    }
+
+    [SerializeField] List<DebugFloat> debug_floats = new List<DebugFloat>();
+    [SerializeField] List<DebugVector3> debug_vectors = new List<DebugVector3>();
+
     // Start is called before the first frame update
     void Start()
     {
         
+    }
+
+    private void Update()
+    {
+        debug_floats.Clear();
+        debug_vectors.Clear();
     }
 
     // Update is called once per frame
@@ -77,19 +121,18 @@ public class PlayerController : MonoBehaviour
         var acceleration = m_forceAccumulator;
         m_forceAccumulator = Vector3.zero;
 
-
         var impulse = m_impulseAccumulator + acceleration * deltaTime;
         m_impulseAccumulator = Vector3.zero;
 
-        if(m_moveInput.sqrMagnitude > 0.0f)
-        {
-            var lateralVel = m_velocity;
-            lateralVel.y = 0.0f;
-            var playerAcceleration = m_moveInput * m_acceleration * deltaTime;
-            playerAcceleration += BBB.CharacterPhysics.LimitAcceleration(lateralVel, m_moveInput, m_moveInput.magnitude, m_acceleration, deltaTime, m_maxPlayerSpeed, m_absoluteMaxSpeed);
-            impulse += playerAcceleration;
-        }
+        // Limit player movement if they are moving daster than their max speed.
+        var playerAcceleration = m_moveInput * m_acceleration * deltaTime;
+        playerAcceleration *= BBB.CharacterPhysics.SimpleDirectionConstraint(m_moveInput, m_lateralHeading, m_lateralSpeed, m_maxPlayerSpeed);
+        impulse += playerAcceleration;
 
+        // An Absolute maximum speed.
+        impulse += BBB.CharacterPhysics.SimpleLimit(m_lateralHeading, m_lateralSpeed, m_absoluteMaxSpeed);
+
+        // Add Gravity
         if(!m_isGrounded)
         {
             m_velocity.y += Physics.gravity.y * m_gravityScale * Time.deltaTime;
@@ -97,10 +140,22 @@ public class PlayerController : MonoBehaviour
 
         m_velocity += impulse;
         m_currentSpeed = m_velocity.magnitude;
+        m_lateralVelocity = m_velocity;
+        m_lateralVelocity.y = 0.0f;
 
-        if(m_currentSpeed != 0.0f)
+        if (m_currentSpeed != 0.0f)
         {
             m_heading = m_velocity / m_currentSpeed;
+
+            m_lateralSpeed = m_lateralVelocity.magnitude;
+            if (m_lateralSpeed != 0.0f)
+            {
+                m_lateralHeading = m_lateralVelocity / m_lateralSpeed;
+            }
+        }
+        else
+        {
+            m_lateralSpeed = 0.0f;
         }
     }
 
@@ -124,22 +179,7 @@ public class PlayerController : MonoBehaviour
 
     void Friction(float deltaTime)
     {
-        //if (m_moveInput.sqrMagnitude == 0.0f)
-        //{
-        //    var lateralHead = m_heading;
-        //    lateralHead.y = 0.0f;
-        //    AddForce(-lateralHead.normalized * m_braking);
-        //
-        //    var lateralVel = m_velocity;
-        //    lateralVel.y = 0.0f;
-        //
-        //    //lateralVel = Vector3.MoveTowards(lateralVel, Vector3.zero, m_braking * deltaTime);
-        //    //m_velocity.x = lateralVel.x;
-        //    //m_velocity.z = lateralVel.z;
-        //    //m_velocity = Vector3.MoveTowards(m_velocity, Vector3.zero, m_braking * deltaTime);
-        //}
-
-        m_impulseAccumulator += BBB.CharacterPhysics.AddDrag(m_heading, m_currentSpeed, m_braking, deltaTime);
+        m_impulseAccumulator += BBB.CharacterPhysics.AddDrag(m_lateralHeading, m_lateralSpeed, m_braking, deltaTime);
     }
 
     bool GroundRay(out RaycastHit hitInfo)

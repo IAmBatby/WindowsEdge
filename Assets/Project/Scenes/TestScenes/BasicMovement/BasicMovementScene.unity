@@ -1618,15 +1618,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_charController: {fileID: 1636036794}
-  m_acceleration: 50
-  m_braking: 5
-  m_maxPlayerSpeed: 5
+  m_acceleration: 75
+  m_braking: 50
+  m_maxPlayerSpeed: 10
+  m_absoluteMaxSpeed: 50
   m_jumpHeight: 2
   m_gravityScale: 1
+  m_overSpeedScale: 1
+  m_limitPullStrength: 1
   m_groundRayLength: 0.1
   m_groundLayer:
     serializedVersion: 2
     m_Bits: 4294967295
+  debug_floats: []
+  debug_vectors: []
 --- !u!143 &1636036794
 CharacterController:
   m_ObjectHideFlags: 0
@@ -1686,6 +1691,7 @@ MonoBehaviour:
   m_camHead: {fileID: 1297605483}
   m_cameraSens: 1
   m_camClamp: {x: -89, y: 89}
+  debug_force: 15
 --- !u!114 &1636036797
 MonoBehaviour:
   m_ObjectHideFlags: 0
