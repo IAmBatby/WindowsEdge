@@ -46,6 +46,8 @@ public class GameManager : MonoBehaviour
             levelData.InitializeObjectives();
 
         SceneManager.sceneLoaded += OnSceneLoaded;
+
+        onInitalize?.Invoke();
     }
 
     public void LoadLevel(LevelData levelData)
@@ -78,8 +80,6 @@ public class GameManager : MonoBehaviour
 
         foreach (ObjectiveData objective in currentLevel.currentLevelObjectives)
             objective.objectiveState = ObjectiveState.Uncomplete;
-
-        onInitalize?.Invoke();
     }
 
     public void Update()
