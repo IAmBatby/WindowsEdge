@@ -8,8 +8,8 @@ public class PlayerController : MonoBehaviour
 
     [SerializeField] float m_acceleration = 5.0f;
     [SerializeField] float m_airAcceleration = 2.5f;
-    [SerializeField] float m_braking = 5.0f;
-    [SerializeField] float m_airBraking = 1.0f;
+    [SerializeField] float m_brakingScale = 0.6f;
+    [SerializeField] float m_airBrakingScale = 0.1f;
 
     [SerializeField] float m_maxPlayerSpeed = 5.0f;
     [SerializeField] float m_absoluteMaxSpeed = 50.0f;
@@ -39,7 +39,7 @@ public class PlayerController : MonoBehaviour
     [Header("Inputs")]
     Vector3 m_moveInput = Vector3.zero;
 
-    public float braking { get { return m_braking; } set {  m_braking = value; } }
+    public float braking { get { return m_brakingScale; } set {  m_brakingScale = value; } }
     public float maxPlayerSpeed { get { return m_maxPlayerSpeed; } set { m_maxPlayerSpeed = value; } }
 
     // Update is called once per frame
@@ -149,11 +149,11 @@ public class PlayerController : MonoBehaviour
     {
         if (m_isGrounded)
         {
-            m_impulseAccumulator += BBB.CharacterPhysics.AddDrag(m_lateralHeading, m_lateralSpeed, m_braking, deltaTime);
+            m_impulseAccumulator += BBB.CharacterPhysics.AddDrag(m_lateralHeading, m_lateralSpeed, m_acceleration * m_brakingScale, deltaTime);
         }
         else
         {
-            m_impulseAccumulator += BBB.CharacterPhysics.AddDrag(m_lateralHeading, m_lateralSpeed, m_airBraking, deltaTime);
+            m_impulseAccumulator += BBB.CharacterPhysics.AddDrag(m_lateralHeading, m_lateralSpeed, m_acceleration * m_airBrakingScale, deltaTime);
         }
     }
 

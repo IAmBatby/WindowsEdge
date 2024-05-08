@@ -11,8 +11,8 @@ public class PlayerInput : MonoBehaviour
 
     [SerializeField] Vector2 m_camClamp = new Vector2 (-89, 89);
 
-    [SerializeField] float m_standBrake = 5.0f;
-    [SerializeField] float m_crouchBrake = 1.0f;
+    [SerializeField] float m_standBrake = 0.6f;
+    [SerializeField] float m_crouchBrake = 0.1f;
 
     [SerializeField] float m_playerSpeed = 5.0f;
     [SerializeField] float m_crouchSpeedScale = 0.5f;

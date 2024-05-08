@@ -1388,6 +1388,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dc1f8b7807f4f4044af3d080f3925779, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_impulse: 20
 --- !u!65 &1396951705
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1649,8 +1650,8 @@ MonoBehaviour:
   m_charController: {fileID: 3689541001426528088}
   m_acceleration: 75
   m_airAcceleration: 25
-  m_braking: 50
-  m_airBraking: 10
+  m_brakingScale: 0.6
+  m_airBrakingScale: 0.1
   m_maxPlayerSpeed: 10
   m_absoluteMaxSpeed: 50
   m_jumpHeight: 2
@@ -1708,8 +1709,8 @@ MonoBehaviour:
   m_camHead: {fileID: 5103797113312270391}
   m_cameraSens: 1
   m_camClamp: {x: -89, y: 89}
-  m_standBrake: 50
-  m_crouchBrake: 15
+  m_standBrake: 0.6
+  m_crouchBrake: 0.1
   m_playerSpeed: 10
   m_crouchSpeedScale: 0.5
   m_runSpeedScale: 1.5
