@@ -14,7 +14,7 @@ public class LevelData : ScriptableObject
     private Dictionary<ObjectiveData, ObjectiveData> assetLiveObjectiveDataDictionary = new Dictionary<ObjectiveData, ObjectiveData>();
 
     [Header("In-Game")]
-    public List<ObjectiveData> currentLevelObjectives = new List<ObjectiveData>();
+    [HideInInspector] public List<ObjectiveData> currentLevelObjectives = new List<ObjectiveData>();
 
     public void InitializeObjectives()
     {

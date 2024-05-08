@@ -73,7 +73,8 @@ public class GameManager : MonoBehaviour
         currentTimerProgress = 0f;
         currentTimerLength = 0f;
         startTime = Time.time;
-        coroutine = StartCoroutine(Timer(120f));
+        if (coroutine == null)
+            coroutine = StartCoroutine(Timer(120f));
 
         foreach (ObjectiveData objective in currentLevel.currentLevelObjectives)
             objective.objectiveState = ObjectiveState.Uncomplete;
