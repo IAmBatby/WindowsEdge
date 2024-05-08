@@ -12,15 +12,35 @@ public class LevelInfoPopup : MonoBehaviour
     public TextMeshProUGUI levelNameText;
     public TextMeshProUGUI levelObjectivesText;
 
-    public void LoadPopup(LevelData newLevelData)
+    public void LoadPopup(LevelData newLevelData = null)
     {
-        currentLevelData = newLevelData;
+        if (newLevelData != null)
+            currentLevelData = newLevelData;
         popupAnimator.SetBool("IsEnabled", true);
         levelNameText.text = currentLevelData.levelName.ToUpper();
 
         levelObjectivesText.text = string.Empty;
 
-        foreach (ObjectiveData objectiveData in currentLevelData.levelObjectives)
-            levelObjectivesText.text += "- " + objectiveData.objectiveName + "\n";
+        foreach (ObjectiveData objectiveData in currentLevelData.currentLevelObjectives)
+            levelObjectivesText.text += "- " + GetObjectiveString(objectiveData) + "\n";
+    }
+
+    public void UnloadPopup()
+    {
+        popupAnimator.SetBool("IsEnabled", false);
+    }
+
+    public string GetObjectiveString(ObjectiveData objectiveData)
+    {
+        string returnString = objectiveData.objectiveDescription;
+
+        if (objectiveData.objectiveState == ObjectiveState.Complete)
+            return (("<s>" + returnString.Colorize(Color.green) + "</s>").ToItalic());
+        else if (objectiveData.objectiveState == ObjectiveState.InProgress)
+            return (returnString.Colorize(Color.yellow));
+        else if (objectiveData.objectiveState == ObjectiveState.Failed)
+            return (("<s>" + returnString.Colorize(Color.red) + "</s>").ToItalic());
+        else
+            return (returnString);
     }
 }

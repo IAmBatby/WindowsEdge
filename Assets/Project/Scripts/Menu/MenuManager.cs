@@ -17,13 +17,19 @@ public class MenuManager : MonoBehaviour
         }
     }
 
-    public LevelInfoPopup levelInfoPopup;
+    public LevelInfoPopup levelSelectLevelInfoPopup;
+    public LevelInfoPopup gameplayLevelSelectInfoPopup;
     public List<LevelHover> levelHovers = new List<LevelHover>();
     public LevelHover activeHover;
 
     public List<Transform> menuParents = new List<Transform>();
     public Transform activeMenuParent;
     public PlayButton playButton;
+
+    public Transform gameplayPlayMenuParent;
+    public Transform gameplayPauseMenuParent;
+
+    public Image levelSelectMenu;
 
     public Material skyboxMaterial;
 
@@ -37,6 +43,9 @@ public class MenuManager : MonoBehaviour
     public Color currentSkyColor;
     public Color currentGroundColor;
 
+    public TextMeshProUGUI timerTexts;
+    public TextMeshProUGUI objectiveCountText;
+
     public void RefreshLevelInfoPopup(LevelData levelData)
     {
         foreach (LevelHover hover in levelHovers)
@@ -44,7 +53,7 @@ public class MenuManager : MonoBehaviour
                 activeHover = hover;
         currentSelectedLevel = levelData;
         playButton.Refresh();
-        levelInfoPopup.LoadPopup(levelData);
+        levelSelectLevelInfoPopup.LoadPopup(levelData);
     }
 
     public void ToggleActiveMenu(GameObject gameObject)
@@ -60,7 +69,7 @@ public class MenuManager : MonoBehaviour
             if (menuParent == activeMenuParent)
                 menuParent.localScale = Vector3.Lerp(menuParent.localScale, Vector3.one, 0.5f * menuLerpRate);
             else
-                menuParent.localScale = Vector3.Lerp(menuParent.localScale, Vector3.one * 2, 0.5f * menuLerpRate);
+                menuParent.localScale = Vector3.Lerp(menuParent.localScale, Vector3.one * 7, 0.5f * menuLerpRate);
         }
 
         if (activeHover != null && currentSelectedLevel != null)
@@ -68,9 +77,18 @@ public class MenuManager : MonoBehaviour
             currentAtmosphereRate = Mathf.Lerp(currentAtmosphereRate, activeHover.atmosphereLevel, 0.5f * atmosphereLerpRate);
             currentSkyColor = Color.Lerp(currentSkyColor, activeHover.skyColor, 0.5f * atmosphereLerpRate);
             currentGroundColor = Color.Lerp(currentGroundColor, activeHover.groundColor, 0.5f * atmosphereLerpRate);
+
+            activeHover.image.color = activeHover.hoverColor;
+            playButton.selectColor = activeHover.hoverColor;
+            playButton.playButtonBackground.color = activeHover.hoverColor;
+            levelSelectMenu.color = activeHover.hoverColor;
         }
+        else
+            playButton.playButtonBackground.color = playButton.unselectColor;
+        RenderSettings.fogColor = currentGroundColor;
+        RenderSettings.ambientSkyColor = currentSkyColor;
         RenderSettings.skybox.SetFloat("_AtmosphereThickness", currentAtmosphereRate);
-        //RenderSettings.skybox.SetColor("_SkyTint", currentSkyColor);
-        //RenderSettings.skybox.SetColor("_GroundColor", currentGroundColor);
+        RenderSettings.skybox.SetColor("_SkyTint", currentSkyColor);
+        RenderSettings.skybox.SetColor("_GroundColor", currentGroundColor);
     }
 }

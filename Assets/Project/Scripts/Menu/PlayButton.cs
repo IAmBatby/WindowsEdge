@@ -16,7 +16,9 @@ public class PlayButton : MonoBehaviour
     public void TryLoadLevel()
     {
         if (MenuManager.Instance.currentSelectedLevel != null)
-            SceneManager.LoadScene(MenuManager.Instance.currentSelectedLevel.sceneName);
+        {
+            GameManager.Instance.LoadLevel(MenuManager.Instance.currentSelectedLevel);
+        }
     }
 
     public void Refresh()

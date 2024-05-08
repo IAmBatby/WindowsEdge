@@ -11,14 +11,11 @@ public class TriggerObjective : Objective
 
     public override void Awake()
     {
-        foreach (ObjectivePosition objectivePosition in objectivePositions)
-        {
-            objectivePosition.onTriggerEnter += OnObjectiveReached;
-            objectivePosition.gameObject.SetActive(false);
-        }
         base.Awake();
 
-
+        currentObjectivePosition = objectivePositions.First();
+        currentObjectivePosition.onTriggerEnter += StartObjective;
+        currentObjectivePosition.Activate();
         
     }
 
@@ -28,10 +25,10 @@ public class TriggerObjective : Objective
 
         Debug.Log("TriggerObjective Started!", transform);
 
-        foreach (ObjectivePosition objectivePosition in objectivePositions)
-            objectivePosition.gameObject.SetActive(true);
+        currentObjectivePosition.onTriggerEnter -= StartObjective;
+        //currentObjectivePosition.Deactivate();
 
-        currentObjectivePosition = objectivePositions.First();
+        OnObjectiveReached(currentObjectivePosition);
     }
 
     protected override void OnObjectiveEnd()
@@ -47,9 +44,25 @@ public class TriggerObjective : Objective
         {
             Debug.Log("TriggerObjective Position Reached!");
             if (objectivePositions.Last() == objectivePosition)
+            {
                 EndObjective(true);
+                foreach (ObjectivePosition position in objectivePositions)
+                {
+                    position.Deactivate();
+                    position.onTriggerEnter -= OnObjectiveReached;
+                    position.onTriggerEnter -= StartObjective;
+                }
+                objectivePositions.First().Activate();
+                objectivePositions.First().onTriggerEnter += StartObjective;
+
+            }
             else
+            {
+                currentObjectivePosition.onTriggerEnter -= OnObjectiveReached;
                 currentObjectivePosition = objectivePositions[objectivePositions.IndexOf(objectivePosition) + 1];
+                currentObjectivePosition.Activate();
+                currentObjectivePosition.onTriggerEnter += OnObjectiveReached;
+            }
         }
     }
 

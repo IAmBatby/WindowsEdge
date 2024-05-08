@@ -5,12 +5,13 @@ using UnityEngine;
 public enum ObjectiveState { Uncomplete, InProgress, Complete, Failed }
 public class Objective : MonoBehaviour
 {
-    public string objectiveName;
-    public ObjectiveState ObjectiveState { get; private set; }
+    public ObjectiveData objectiveData;
 
     public virtual void Awake()
     {
-        StartObjective();
+        if (GameManager.Instance != null && GameManager.Instance.currentLevel != null)
+            objectiveData = GameManager.Instance.currentLevel.GetObjectiveData(objectiveData);
+        //StartObjective();
     }
 
 
@@ -18,6 +19,11 @@ public class Objective : MonoBehaviour
     {
         ChangeObjectiveState(ObjectiveState.InProgress);
         OnObjectiveStart();
+    }
+
+    public void StartObjective(ObjectivePosition _)
+    {
+        StartObjective();
     }
 
     public void EndObjective(bool successValue)
@@ -32,9 +38,9 @@ public class Objective : MonoBehaviour
 
     public void ChangeObjectiveState(ObjectiveState newObjectiveState)
     {
-        ObjectiveState = newObjectiveState;
+        objectiveData.objectiveState = newObjectiveState;
 
-        switch (ObjectiveState)
+        switch (objectiveData.objectiveState)
         {
             case ObjectiveState.Uncomplete:
                 break;
