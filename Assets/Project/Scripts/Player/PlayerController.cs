@@ -31,9 +31,6 @@ public class PlayerController : MonoBehaviour
     bool m_isGrounded = false;
     bool m_isJumping = false;
 
-    [SerializeField] float m_overSpeedScale = 1.0f;
-    [SerializeField] float m_limitPullStrength = 1.0f;
-
     [Header("GroundChecking")]
     [SerializeField] float m_groundRayLength = 0.1f;
     [SerializeField] LayerMask m_groundLayer = ~0;
@@ -41,47 +38,6 @@ public class PlayerController : MonoBehaviour
     // Inputs
     [Header("Inputs")]
     Vector3 m_moveInput = Vector3.zero;
-
-    [System.Serializable]
-    struct DebugFloat
-    {
-        public string name;
-        public float value;
-
-        public DebugFloat(string name, float value)
-        {
-            this.name = name;
-            this.value = value;
-        }
-    }
-
-    [System.Serializable]
-    struct DebugVector3
-    {
-        public string name;
-        public Vector3 value;
-
-        public DebugVector3(string name, Vector3 value)
-        {
-            this.name = name;
-            this.value = value;
-        }
-    }
-
-    [SerializeField] List<DebugFloat> debug_floats = new List<DebugFloat>();
-    [SerializeField] List<DebugVector3> debug_vectors = new List<DebugVector3>();
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    private void Update()
-    {
-        debug_floats.Clear();
-        debug_vectors.Clear();
-    }
 
     // Update is called once per frame
     void LateUpdate()
@@ -184,7 +140,7 @@ public class PlayerController : MonoBehaviour
 
     bool GroundRay(out RaycastHit hitInfo)
     {
-        return Physics.Raycast(transform.position, Vector3.down, out hitInfo, m_groundRayLength + m_charController.skinWidth, m_groundLayer);
+        return Physics.Raycast(transform.position, Vector3.down, out hitInfo, m_groundRayLength + m_charController.skinWidth, m_groundLayer, QueryTriggerInteraction.Ignore);
     }
 
     public void TryJump()
@@ -198,6 +154,6 @@ public class PlayerController : MonoBehaviour
 
     private void OnControllerColliderHit(ControllerColliderHit hit)
     {
-        Debug.Log("Boop");
+        //Debug.Log("Boop");
     }
 }

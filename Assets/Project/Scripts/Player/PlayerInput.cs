@@ -11,8 +11,6 @@ public class PlayerInput : MonoBehaviour
 
     [SerializeField] Vector2 m_camClamp = new Vector2 (-89, 89);
 
-    [SerializeField] float debug_force = 1.0f;
-
     // Start is called before the first frame update
     void Start()
     {
@@ -41,16 +39,6 @@ public class PlayerInput : MonoBehaviour
 
         RotateCamBody(mouseInput.x * m_cameraSens);
         RotateCamHead(mouseInput.y * m_cameraSens);
-
-        if(Input.GetKey(KeyCode.Z))
-        {
-            m_controller.AddForce(transform.forward * debug_force);
-        }
-
-        if (Input.GetKey(KeyCode.E))
-        {
-            Debug.Break();
-        }
     }
 
     void RotateCamBody(float rot)
