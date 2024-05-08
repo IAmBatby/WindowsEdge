@@ -1,15 +1,15 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static UnityEditor.PlayerSettings;
-using UnityEngine.UIElements.Experimental;
 
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] CharacterController m_charController;
 
     [SerializeField] float m_acceleration = 5.0f;
+    [SerializeField] float m_airAcceleration = 2.5f;
     [SerializeField] float m_braking = 5.0f;
+    [SerializeField] float m_airBraking = 1.0f;
 
     [SerializeField] float m_maxPlayerSpeed = 5.0f;
     [SerializeField] float m_absoluteMaxSpeed = 50.0f;
@@ -38,6 +38,9 @@ public class PlayerController : MonoBehaviour
     // Inputs
     [Header("Inputs")]
     Vector3 m_moveInput = Vector3.zero;
+
+    public float braking { get { return m_braking; } set {  m_braking = value; } }
+    public float maxPlayerSpeed { get { return m_maxPlayerSpeed; } set { m_maxPlayerSpeed = value; } }
 
     // Update is called once per frame
     void LateUpdate()
@@ -81,7 +84,16 @@ public class PlayerController : MonoBehaviour
         m_impulseAccumulator = Vector3.zero;
 
         // Limit player movement if they are moving daster than their max speed.
-        var playerAcceleration = m_moveInput * m_acceleration * deltaTime;
+        var playerAcceleration = m_moveInput * deltaTime;
+        if(m_isGrounded)
+        {
+            playerAcceleration *= m_acceleration;
+        }
+        else
+        {
+            playerAcceleration *= m_airAcceleration;
+        }
+
         playerAcceleration *= BBB.CharacterPhysics.SimpleDirectionConstraint(m_moveInput, m_lateralHeading, m_lateralSpeed, m_maxPlayerSpeed);
         impulse += playerAcceleration;
 
@@ -135,7 +147,14 @@ public class PlayerController : MonoBehaviour
 
     void Friction(float deltaTime)
     {
-        m_impulseAccumulator += BBB.CharacterPhysics.AddDrag(m_lateralHeading, m_lateralSpeed, m_braking, deltaTime);
+        if (m_isGrounded)
+        {
+            m_impulseAccumulator += BBB.CharacterPhysics.AddDrag(m_lateralHeading, m_lateralSpeed, m_braking, deltaTime);
+        }
+        else
+        {
+            m_impulseAccumulator += BBB.CharacterPhysics.AddDrag(m_lateralHeading, m_lateralSpeed, m_airBraking, deltaTime);
+        }
     }
 
     bool GroundRay(out RaycastHit hitInfo)
@@ -150,6 +169,16 @@ public class PlayerController : MonoBehaviour
             m_isJumping = true;
             AddImpulse(Vector3.up * BBB.CharacterPhysics.CalculateJumpForce(m_jumpHeight, Physics.gravity.y * m_gravityScale));
         }
+    }
+
+    public void SetCharacterHeight(float height)
+    {
+        var center = m_charController.center;
+        float m_centerHeightScale = center.y / m_charController.height;
+        m_charController.height = height;
+
+        center.y = m_centerHeightScale * height;
+        m_charController.center = center;
     }
 
     private void OnControllerColliderHit(ControllerColliderHit hit)
