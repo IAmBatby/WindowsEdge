@@ -58,19 +58,32 @@ public class FloorIsLavaObjective : Objective
         endingPosition.onTriggerEnter -= SucceedObjective;
     }
 
+    public void OnValidate()
+    {
+        for (int i = 0; i < objectivePositions.Count; i++)
+            if (objectivePositions[i] == null)
+                objectivePositions.RemoveAt(i);
+    }
+
 
     public void OnDrawGizmos()
     {
         foreach (ObjectivePosition objectivePosition in objectivePositions)
-            if (objectivePosition.isActivePosition == true)
+            if (objectivePosition != null && objectivePosition.isActivePosition == true)
             {
                 Gizmos.color = new Color(Color.red.r, Color.red.g, Color.red.b, 125 * 255);
                 Gizmos.DrawCube(objectivePosition.transform.position, objectivePosition.transform.localScale);
             }
 
-        Gizmos.color = Color.green;
-        Gizmos.DrawCube(startingPosition.transform.position, Vector3.one);
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawCube(endingPosition.transform.position, Vector3.one);
+        if (startingPosition != null)
+        {
+            Gizmos.color = Color.green;
+            Gizmos.DrawCube(startingPosition.transform.position, Vector3.one);
+        }
+        if (endingPosition != null)
+        {
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawCube(endingPosition.transform.position, Vector3.one);
+        }
     }
 }

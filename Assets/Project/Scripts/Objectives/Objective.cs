@@ -9,7 +9,8 @@ public class Objective : MonoBehaviour
 
     public virtual void Awake()
     {
-        objectiveData = GameManager.Instance.currentLevel.GetObjectiveData(objectiveData);
+        if (GameManager.Instance != null && GameManager.Instance.currentLevel != null)
+            objectiveData = GameManager.Instance.currentLevel.GetObjectiveData(objectiveData);
         //StartObjective();
     }
 
