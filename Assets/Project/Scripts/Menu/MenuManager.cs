@@ -46,6 +46,9 @@ public class MenuManager : MonoBehaviour
     public TextMeshProUGUI timerTexts;
     public TextMeshProUGUI objectiveCountText;
 
+    public TextMeshProUGUI speedText;
+    public Image speedImage;
+
     public void RefreshLevelInfoPopup(LevelData levelData)
     {
         foreach (LevelHover hover in levelHovers)
@@ -90,5 +93,6 @@ public class MenuManager : MonoBehaviour
         RenderSettings.skybox.SetFloat("_AtmosphereThickness", currentAtmosphereRate);
         RenderSettings.skybox.SetColor("_SkyTint", currentSkyColor);
         RenderSettings.skybox.SetColor("_GroundColor", currentGroundColor);
+        speedImage.color = currentGroundColor;
     }
 }
