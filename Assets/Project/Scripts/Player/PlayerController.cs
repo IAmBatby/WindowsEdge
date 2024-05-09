@@ -42,6 +42,8 @@ public class PlayerController : MonoBehaviour
     public float braking { get { return m_brakingScale; } set {  m_brakingScale = value; } }
     public float maxPlayerSpeed { get { return m_maxPlayerSpeed; } set { m_maxPlayerSpeed = value; } }
 
+    public float MaxPlayerSpeed { get { return (m_maxPlayerSpeed); } set { m_maxPlayerSpeed = value; } }
+    public float CurrentPlayerSpeed { get { return (m_lateralSpeed); } set { m_lateralSpeed = value; } }
     // Update is called once per frame
     void LateUpdate()
     {
