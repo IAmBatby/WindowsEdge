@@ -39,6 +39,9 @@ public class PlayerController : MonoBehaviour
     [Header("Inputs")]
     Vector3 m_moveInput = Vector3.zero;
 
+    public float MaxPlayerSpeed { get { return (m_maxPlayerSpeed); } set { m_maxPlayerSpeed = value; } }
+    public float CurrentPlayerSpeed { get { return (m_lateralSpeed); } set { m_lateralSpeed = value; } }
+
     // Update is called once per frame
     void LateUpdate()
     {

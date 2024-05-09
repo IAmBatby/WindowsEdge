@@ -110,6 +110,12 @@ public class GameManager : MonoBehaviour
 
             currentTimerProgress = (currentTimerLength - (startTime - Time.time)) - currentTimerLength;
             MenuManager.Instance.timerTexts.text = currentTimerProgress.ToString("F2");
+
+            if (playerController != null)
+            {
+                MenuManager.Instance.speedText.text = Mathf.RoundToInt(playerController.CurrentPlayerSpeed)+ "km/h";
+                MenuManager.Instance.speedImage.fillAmount = playerController.CurrentPlayerSpeed / playerController.MaxPlayerSpeed;
+            }
         }
     }
 
