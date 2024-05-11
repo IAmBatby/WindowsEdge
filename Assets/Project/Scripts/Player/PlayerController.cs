@@ -28,12 +28,17 @@ public class PlayerController : MonoBehaviour
     Vector3 m_forceAccumulator = Vector3.zero;
     Vector3 m_impulseAccumulator = Vector3.zero;
 
-    bool m_isGrounded = false;
+    float m_fallingVelocity = 0.0f;
+
+    //bool m_isGrounded = false;
     bool m_isJumping = false;
+    bool m_touchedGrass = false;
+    bool m_isGrounded = false;
 
     [Header("GroundChecking")]
     [SerializeField] float m_groundRayLength = 0.1f;
     [SerializeField] LayerMask m_groundLayer = ~0;
+    [SerializeField] Vector3 m_groundNormal = Vector3.up;
 
     // Inputs
     [Header("Inputs")]
@@ -41,6 +46,11 @@ public class PlayerController : MonoBehaviour
 
     public float braking { get { return m_brakingScale; } set {  m_brakingScale = value; } }
     public float maxPlayerSpeed { get { return m_maxPlayerSpeed; } set { m_maxPlayerSpeed = value; } }
+
+    bool m_wasGrounded = false;
+    bool m_groundIsDetected = false;
+
+
 
     // Update is called once per frame
     void LateUpdate()
@@ -70,6 +80,8 @@ public class PlayerController : MonoBehaviour
 
     void Process(float deltaTime)
     {
+        SetGrounded();
+
         ProcessAcceleration(deltaTime);
         Friction(deltaTime);
         ProcessMovement(deltaTime);
@@ -83,9 +95,10 @@ public class PlayerController : MonoBehaviour
         var impulse = m_impulseAccumulator + acceleration * deltaTime;
         m_impulseAccumulator = Vector3.zero;
 
-        // Limit player movement if they are moving daster than their max speed.
-        var playerAcceleration = m_moveInput * deltaTime;
-        if(m_isGrounded)
+        // Limit player movement if they are moving faster than their max speed.
+        var moveInput = ReorientSlope(m_moveInput);
+        var playerAcceleration = moveInput * deltaTime;
+        if(m_groundIsDetected)
         {
             playerAcceleration *= m_acceleration;
         }
@@ -94,7 +107,7 @@ public class PlayerController : MonoBehaviour
             playerAcceleration *= m_airAcceleration;
         }
 
-        playerAcceleration *= BBB.CharacterPhysics.SimpleDirectionConstraint(m_moveInput, m_lateralHeading, m_lateralSpeed, m_maxPlayerSpeed);
+        playerAcceleration *= BBB.CharacterPhysics.SimpleDirectionConstraint(moveInput, m_lateralHeading, m_lateralSpeed, m_maxPlayerSpeed);
         impulse += playerAcceleration;
 
         // An Absolute maximum speed.
@@ -103,13 +116,20 @@ public class PlayerController : MonoBehaviour
         // Add Gravity
         if(!m_isGrounded)
         {
-            m_velocity.y += Physics.gravity.y * m_gravityScale * Time.deltaTime;
+            m_fallingVelocity += Gravity().y;
         }
 
-        m_velocity += impulse;
+        SetVelocity(m_velocity + impulse);
+    }
+
+    void SetVelocity(Vector3 velocity)
+    {
+        m_velocity = velocity;
         m_currentSpeed = m_velocity.magnitude;
         m_lateralVelocity = m_velocity;
         m_lateralVelocity.y = 0.0f;
+
+        m_lateralVelocity = ReorientSlope(m_lateralVelocity);
 
         if (m_currentSpeed != 0.0f)
         {
@@ -129,32 +149,29 @@ public class PlayerController : MonoBehaviour
 
     void ProcessMovement(float deltaTime)
     {
-        var collisionFlag = m_charController.Move(m_velocity * Time.deltaTime);
-
-        bool wasGrounded = m_isGrounded;
-        m_isGrounded = GroundRay(out RaycastHit hitInfo);
-
-        if (!wasGrounded && m_isGrounded)
-        {
-            m_velocity.y = 0.0f;
-        }
-
-        if(!m_isGrounded && m_isJumping)
-        {
-            m_isJumping = false;
-        }
+        var collisionFlag = m_charController.Move((Vector3.up * m_fallingVelocity + m_velocity) * Time.deltaTime);
     }
 
     void Friction(float deltaTime)
     {
-        if (m_isGrounded)
+        if (m_groundIsDetected)
         {
-            m_impulseAccumulator += BBB.CharacterPhysics.AddDrag(m_lateralHeading, m_lateralSpeed, m_acceleration * m_brakingScale, deltaTime);
+            m_impulseAccumulator += BBB.CharacterPhysics.AddDrag(m_heading, m_currentSpeed, m_acceleration * m_brakingScale, deltaTime);
         }
         else
         {
-            m_impulseAccumulator += BBB.CharacterPhysics.AddDrag(m_lateralHeading, m_lateralSpeed, m_acceleration * m_airBrakingScale, deltaTime);
+            m_impulseAccumulator += BBB.CharacterPhysics.AddDrag(m_heading, m_currentSpeed, m_acceleration * m_airBrakingScale, deltaTime);
         }
+    }
+
+    Vector3 Gravity()
+    {
+        return Physics.gravity * m_gravityScale * Time.deltaTime;
+    }
+
+    Vector3 BottomPos()
+    {
+        return transform.position + m_charController.center + Vector3.down * ((m_charController.height * 0.5f) - m_charController.radius);
     }
 
     bool GroundRay(out RaycastHit hitInfo)
@@ -181,8 +198,73 @@ public class PlayerController : MonoBehaviour
         m_charController.center = center;
     }
 
+    public Vector3 ReorientSlope(Vector3 move)
+    {
+        return Vector3.ProjectOnPlane(move, m_groundNormal);
+    }
+
+    void SetGrounded()
+    {
+        if (!m_touchedGrass)
+        {
+            m_touchedGrass = m_charController.isGrounded;
+        }
+        m_groundIsDetected = GroundRay(out RaycastHit hitInfo);
+
+        m_wasGrounded = m_isGrounded;
+        m_isGrounded = m_touchedGrass && m_groundIsDetected;
+
+        if (m_groundIsDetected)
+        {
+            m_groundNormal = hitInfo.normal;
+        }
+        else
+        {
+            m_groundNormal = Vector3.up;
+        }
+
+        if (!m_wasGrounded && m_isGrounded)
+        {
+            Debug.Log("Grounded");
+
+            m_fallingVelocity = 0.0f;
+            ReorientSlope(m_velocity);
+
+        }
+
+        if (m_wasGrounded && !m_isGrounded)
+        {
+            Debug.Log("Air");
+            m_touchedGrass = false;
+            m_fallingVelocity = m_velocity.y;
+            m_velocity.y = 0.0f;
+        }
+
+        if (!m_isGrounded && m_isJumping)
+        {
+            m_isJumping = false;
+        }
+    }
+
     private void OnControllerColliderHit(ControllerColliderHit hit)
     {
         //Debug.Log("Boop");
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.red;
+        var pos = transform.position;
+        Gizmos.DrawLine(pos, pos + ReorientSlope(m_moveInput));
+
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawLine(pos, pos + Vector3.down * (m_groundRayLength + m_charController.skinWidth));
+
+        Gizmos.DrawCube(BottomPos(), Vector3.one * 0.2f);
+
+        var slopeLateral = m_lateralHeading * m_lateralSpeed;
+
+        Gizmos.color = Color.blue;
+        Gizmos.DrawLine(pos, pos + slopeLateral);
     }
 }
