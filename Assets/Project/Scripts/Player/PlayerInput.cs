@@ -69,6 +69,11 @@ public class PlayerInput : MonoBehaviour
             m_controller.TryJump();
         }
 
+        if (Input.GetMouseButtonDown(1))
+        {
+            m_controller.TryStartWallRun();
+        }
+
         Look();
     }
 
