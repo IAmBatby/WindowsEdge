@@ -32,7 +32,7 @@ public class PlayerInput : MonoBehaviour
     void Start()
     {
         m_smoothCrouch = 1.0f;
-        m_controller.braking = m_standBrake;
+        m_controller.brakingScale = m_standBrake;
     }
 
     // Update is called once per frame
@@ -137,7 +137,7 @@ public class PlayerInput : MonoBehaviour
 
     void Crouch()
     {
-        m_controller.braking = m_crouchBrake;
+        m_controller.brakingScale = m_crouchBrake;
         m_controller.maxPlayerSpeed = m_playerSpeed * m_crouchSpeedScale;
 
         SmoothCrouch(m_crouchHeightScale);
@@ -145,7 +145,7 @@ public class PlayerInput : MonoBehaviour
 
     void Stand()
     {
-        m_controller.braking = m_standBrake;
+        m_controller.brakingScale = m_standBrake;
         m_controller.maxPlayerSpeed = m_playerSpeed;
 
         SmoothCrouch(1.0f);

@@ -16,6 +16,14 @@ public class PlayerController : MonoBehaviour
     [SerializeField] float m_maxPlayerSpeed = 5.0f;
     [SerializeField] float m_absoluteMaxSpeed = 50.0f;
 
+    public float acceleration { get { return m_acceleration; } set { m_acceleration = value; } }
+    public float airAcceleration { get { return m_airAcceleration; } set { m_airAcceleration = value; } }
+    public float brakingScale { get { return m_brakingScale; } set { m_brakingScale = value; } }
+    public float airBrakingScale { get { return m_airBrakingScale; } set { m_airBrakingScale = value; } }
+    public float maxPlayerSpeed { get { return m_maxPlayerSpeed; } set { m_maxPlayerSpeed = value; } }
+    public float absoluteMaxSpeed { get { return m_absoluteMaxSpeed; } set { m_absoluteMaxSpeed = value; } }
+
+
     Vector3 m_velocity = Vector3.zero;
     float m_currentSpeed = 0.0f;
     Vector3 m_heading = Vector3.forward;
@@ -27,6 +35,14 @@ public class PlayerController : MonoBehaviour
     Vector3 m_forceAccumulator = Vector3.zero;
     Vector3 m_impulseAccumulator = Vector3.zero;
 
+    public Vector3 velocity { get { return m_velocity; } set { SetVelocity(value); } }
+    public float currentSpeed { get { return (m_currentSpeed); } }
+    public Vector3 heading { get { return m_heading; } }
+
+    public Vector3 lateralVelocity { get { return m_velocity; } }
+    public float lateralSpeed { get { return (m_lateralSpeed); } }
+    public Vector3 lateralHeading { get { return m_heading; } }
+
     [Header("Jumping")]
     [SerializeField] float m_jumpHeight = 2.0f;
     [SerializeField] float m_gravityScale = 1.0f;
@@ -37,6 +53,10 @@ public class PlayerController : MonoBehaviour
     bool m_isJumping = false;
     bool m_touchedGrass = false;
 
+    public float jumpHeight { get { return m_jumpHeight; } set { m_jumpHeight = value; } }
+    public float gravityScale { get { return m_gravityScale; } set { m_gravityScale = value; } }
+    public float jumpLockoutTime { get { return m_jumpLockOutTimer.completeTime; } set { m_jumpLockOutTimer.completeTime = value; } }
+
     [Header("GroundChecking")]
     [SerializeField] float m_groundRayLength = 0.1f;
     [SerializeField] LayerMask m_groundLayer = ~0;
@@ -44,14 +64,26 @@ public class PlayerController : MonoBehaviour
 
     bool m_groundIsDetected = false;
 
+    public float groundRayLength { get { return m_groundRayLength; } set { m_groundRayLength = value; } }
+    public LayerMask groundLayer { get { return m_groundLayer; } set { m_groundLayer = value; } }
+    public Vector3 groundNormal { get { return m_groundNormal; } }
+    public bool groundIsDetected { get { return m_groundIsDetected; } }
+
     [Header("WallRunning")]
     [SerializeField] LayerMask m_wallLayer = ~0;
     [SerializeField] float m_wallRunForce = 5.0f;
     [SerializeField] SimpleTimer m_wallRunTime = new SimpleTimer();
 
+    public LayerMask wallLayer { get { return m_wallLayer; } set { m_wallLayer = value; } }
+    public float wallRunForce { get { return m_wallRunForce; } set { m_wallRunForce = value; } }
+    public float wallRunTime { get { return m_wallRunTime.completeTime; } set { m_wallRunTime.completeTime = value; } }
+
     [Header("WallJump")]
     [SerializeField, Range(0.0f, 1.0f)] float m_wallJumpAngleStrength = 0.5f;
     [SerializeField] float m_wallJumpStrength = 1.0f;
+
+    public float wallJumpAngleStrength { get { return m_wallJumpAngleStrength; } set { m_wallJumpAngleStrength = Mathf.Clamp(value, 0.0f, 1.0f); } }
+    public float wallJumpStrength { get { return m_wallJumpStrength; } set { m_wallJumpStrength = value; } }
 
     [Header("Detection")]
     [SerializeField] float m_wallCheckHeight = 1.0f;
@@ -63,25 +95,32 @@ public class PlayerController : MonoBehaviour
 
     int m_wallRunsLeft = 0;
 
+    public float wallCheckHeight { get { return m_wallCheckHeight; } set { m_wallCheckHeight = value; } }
+    public float wallCheckDistance { get { return m_wallCheckDistance; } set { m_wallCheckDistance = value; } }
+    public RaycastHit leftWallhit { get { return m_leftWallhit; } }
+    public RaycastHit rightWallhit { get { return m_rightWallhit; } }
+    public bool wallLeft { get { return m_wallLeft; } }
+    public bool wallRight { get { return m_wallRight; } }
+
+    public int wallRunsLeft { get { return m_wallRunsLeft; } }
+
     // Inputs
     [Header("Inputs")]
     [SerializeField] float m_inputScale = 1.0f;
     Vector3 m_moveInput = Vector3.zero;
 
-    public float braking { get { return m_brakingScale; } set {  m_brakingScale = value; } }
-    public float maxPlayerSpeed { get { return m_maxPlayerSpeed; } set { m_maxPlayerSpeed = value; } }
-    public float gravityScale { get { return m_gravityScale; } set { m_gravityScale = value; } }
+    public float inputScale { get { return m_inputScale; } set { m_inputScale = value; } }
+    public Vector3 moveInput { get { return m_moveInput; } set { SetMoveInput(value); } }
+
     public float fallingVelocity { get { return m_fallingVelocity; } set { m_fallingVelocity = value; } }
 
     public bool inputDisabled { get { return m_inputScale == 0.0f; } set { m_inputScale = System.Convert.ToSingle(!value); } }
 
-    public Vector3 velocity { get { return m_velocity; } set { SetVelocity(value); } }
-
     public bool isGrounded { get { return m_currentState == PlayerState.Grounded; } }
     public bool isGroundDetected { get { return m_groundIsDetected;} }
 
-    public float MaxPlayerSpeed { get { return (m_maxPlayerSpeed); } set { m_maxPlayerSpeed = value; } }
-    public float CurrentPlayerSpeed { get { return (m_lateralSpeed); } set { m_lateralSpeed = value; } }
+    //public float MaxPlayerSpeed { get { return (m_maxPlayerSpeed); } set { m_maxPlayerSpeed = value; } }
+    //public float CurrentPlayerSpeed { get { return (m_lateralSpeed); } set { m_lateralSpeed = value; } }
     // Update is called once per frame
     void LateUpdate()
     {

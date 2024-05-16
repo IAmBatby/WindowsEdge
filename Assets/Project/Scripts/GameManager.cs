@@ -49,8 +49,6 @@ public class GameManager : MonoBehaviour
             levelData.InitializeObjectives();
 
         SceneManager.sceneLoaded += OnSceneLoaded;
-
-        onInitalize?.Invoke();
     }
 
     public void LoadLevel(LevelData levelData)
@@ -83,6 +81,8 @@ public class GameManager : MonoBehaviour
 
         foreach (ObjectiveData objective in currentLevel.currentLevelObjectives)
             objective.objectiveState = ObjectiveState.Uncomplete;
+
+        onInitalize?.Invoke();
     }
 
     public void Update()
@@ -116,8 +116,8 @@ public class GameManager : MonoBehaviour
 
             if (playerController != null)
             {
-                MenuManager.Instance.speedText.text = Mathf.RoundToInt(playerController.CurrentPlayerSpeed)+ "km/h";
-                MenuManager.Instance.speedImage.fillAmount = playerController.CurrentPlayerSpeed / playerController.MaxPlayerSpeed;
+                MenuManager.Instance.speedText.text = Mathf.RoundToInt(playerController.lateralSpeed) + "km/h";
+                MenuManager.Instance.speedImage.fillAmount = playerController.lateralSpeed / playerController.maxPlayerSpeed;
             }
         }
     }
