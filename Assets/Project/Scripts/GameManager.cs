@@ -21,7 +21,7 @@ public class GameManager : MonoBehaviour
     public List<LevelData> allLevels = new List<LevelData>();
 
     public enum GameState { Play, Pause }
-    public GameState gameState;
+    public GameState gameState = GameState.Pause;
 
     public PlayerController playerController;
     public Volume playerControllerCamera;
@@ -41,6 +41,9 @@ public class GameManager : MonoBehaviour
     public void Awake()
     {
         DontDestroyOnLoad(this.gameObject);
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
 
         foreach (LevelData levelData in allLevels)
             levelData.InitializeObjectives();
@@ -131,12 +134,18 @@ public class GameManager : MonoBehaviour
         switch (gameState)
         {
             case GameState.Play:
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
+
                 Time.timeScale = 1.0f;
                 MenuManager.Instance.ToggleActiveMenu(MenuManager.Instance.gameplayPlayMenuParent.gameObject);
                 MenuManager.Instance.gameplayLevelSelectInfoPopup.UnloadPopup();
                 playerControllerCamera.weight = 0;
                 break;
             case GameState.Pause:
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+
                 Time.timeScale = 0.0f;
                 MenuManager.Instance.ToggleActiveMenu(MenuManager.Instance.gameplayPauseMenuParent.gameObject);
                 MenuManager.Instance.gameplayLevelSelectInfoPopup.LoadPopup(currentLevel);

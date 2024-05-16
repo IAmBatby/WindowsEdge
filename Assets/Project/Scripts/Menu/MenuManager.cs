@@ -14,6 +14,8 @@ public class MenuManager : MonoBehaviour
             if (_instance == null)
                 _instance = FindObjectOfType<MenuManager>();
             return _instance;
+            //
+            //
         }
     }
 
