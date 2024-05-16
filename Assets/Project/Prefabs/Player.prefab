@@ -159,20 +159,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_charController: {fileID: 3689541002390390048}
-  m_acceleration: 50
-  m_airAcceleration: 2.5
+  m_acceleration: 100
+  m_airAcceleration: 50
   m_brakingScale: 0.6
   m_airBrakingScale: 0.1
-  m_maxPlayerSpeed: 5
-  m_absoluteMaxSpeed: 50
-  m_jumpHeight: 2
-  m_gravityScale: 1
+  m_maxPlayerSpeed: 10
+  m_absoluteMaxSpeed: 70
+  m_jumpHeight: 2.24
+  m_gravityScale: 4
   m_jumpLockOutTimer:
-    completeTime: 1
+    completeTime: 0.2
   m_groundRayLength: 0.1
   m_groundLayer:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 55
   m_groundNormal: {x: 0, y: 1, z: 0}
   m_wallLayer:
     serializedVersion: 2
