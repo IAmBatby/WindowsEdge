@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class CursorLockHider : MonoBehaviour
 {
-    [SerializeField] bool m_showCursor = true;
+    [SerializeField] bool m_showCursor;
 
     private void Start()
     {
@@ -31,7 +31,7 @@ public class CursorLockHider : MonoBehaviour
         {
             return;
         }
-        if (m_showCursor)
+        if (m_showCursor || (GameManager.Instance != null && GameManager.Instance.gameState == GameManager.GameState.Pause))
         {
             ShowCursor();
         }
