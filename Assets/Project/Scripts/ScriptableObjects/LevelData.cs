@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TriInspector;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "LevelData", menuName = "ScriptableObjects/LevelData", order = 1)]
@@ -9,12 +10,13 @@ public class LevelData : ScriptableObject
     public string sceneName;
 
     [Header("Editor")]
-    [SerializeField] private List<ObjectiveData> levelObjectives = new List<ObjectiveData>();
+    [HideInPlayMode, SerializeField] private List<ObjectiveData> levelObjectives = new List<ObjectiveData>();
+    [ShowInPlayMode, ShowInInspector, ReadOnly] public List<ObjectiveData> debugLevelObjectives => levelObjectives;
 
     private Dictionary<ObjectiveData, ObjectiveData> assetLiveObjectiveDataDictionary = new Dictionary<ObjectiveData, ObjectiveData>();
 
     [Header("In-Game")]
-    [HideInInspector] public List<ObjectiveData> currentLevelObjectives = new List<ObjectiveData>();
+    [ShowInPlayMode] public List<ObjectiveData> currentLevelObjectives = new List<ObjectiveData>();
 
     public void InitializeObjectives()
     {

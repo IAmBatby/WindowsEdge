@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 127e181ca16a21e46a7872b1a640d3be, type: 3}
+  m_Name: DefaultControlSettings
+  m_EditorClassIdentifier: 
+  debugValueToggle: 0
+  m_forwardInfo:
+    keyCode: 0
+    keyCodeSprite: {fileID: 0}
+  m_backwardInfo:
+    keyCode: 263
+    keyCodeSprite: {fileID: 0}
+  m_leftInfo:
+    keyCode: 0
+    keyCodeSprite: {fileID: 0}
+  m_rightInfo:
+    keyCode: 0
+    keyCodeSprite: {fileID: 0}
+  m_jumpInfo:
+    keyCode: 0
+    keyCodeSprite: {fileID: 0}
+  m_lowerInfo:
+    keyCode: 0
+    keyCodeSprite: {fileID: 0}
+  m_interactInfo:
+    keyCode: 0
+    keyCodeSprite: {fileID: 0}
+  m_quickRestartInfo:
+    keyCode: 99
+    keyCodeSprite: {fileID: 0}
+  m_objectiveInfo:
+    keyCode: 9
+    keyCodeSprite: {fileID: 0}
+  m_menuInfo:
+    keyCode: 27
+    keyCodeSprite: {fileID: 0}

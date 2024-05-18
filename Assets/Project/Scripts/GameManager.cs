@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TriInspector;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
@@ -17,22 +18,40 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public LevelData currentLevel;
+    public enum GameState { Play, Pause }
+    [PropertySpace]
+    [Title("General")]
+
+    [ReadOnly] public GameState gameState = GameState.Pause;
+
+    [PropertySpace]
+    [Title("Levels")]
+
+    [ReadOnly] public LevelData currentLevel;
     public List<LevelData> allLevels = new List<LevelData>();
 
-    public enum GameState { Play, Pause }
-    public GameState gameState = GameState.Pause;
+    [PropertySpace]
+    [Title("Settings")]
 
-    public PlayerController playerController;
-    public Volume playerControllerCamera;
+    [InlineEditor] public PlayerSettings activePlayerSettings;
+    [InlineEditor] public GameSettings activeGameSettings;
+    [InlineEditor] public AudioSettings activeAudioSettings;
+    [InlineEditor] public ControlSettings activeControlSettings;
+    [InlineEditor] public LevelSettings activeLevelSettings;
+
+    [PropertySpace]
+    [Title("References")]
+
+    [ReadOnly] public PlayerController playerController;
+    [ReadOnly] public Volume playerControllerCamera;
 
     public delegate void Initialized();
     public static event Initialized onInitalize;
 
     public System.Action onFlip;
 
-    public float currentTimerProgress;
-    public float currentTimerLength;
+    [HideInInspector] public float currentTimerProgress;
+    [HideInInspector] public float currentTimerLength;
 
     Coroutine coroutine;
 
@@ -89,7 +108,7 @@ public class GameManager : MonoBehaviour
     {
         if (currentLevel != null)
         {
-            if (Input.GetKeyDown(KeyCode.Tab))
+            if (Input.GetKeyDown(activeControlSettings.MenuControl.keyCode))
             {
                 if (gameState == GameState.Pause)
                     ChangeGameState(GameState.Play);
@@ -97,7 +116,7 @@ public class GameManager : MonoBehaviour
                     ChangeGameState(GameState.Pause);
             }
 
-            if (Input.GetKeyDown(KeyCode.C))
+            if (Input.GetKeyDown(activeControlSettings.QuickRestartControl.keyCode))
             {
                 if (coroutine != null)
                     StopCoroutine(coroutine);
