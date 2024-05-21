@@ -69,12 +69,21 @@ public class PlayerController : MonoBehaviour
     public Vector3 groundNormal { get { return m_groundNormal; } }
     public bool groundIsDetected { get { return m_groundIsDetected; } }
 
-    [Header("WallRunning")]
+    [Header("Wall General")]
     [SerializeField] LayerMask m_wallLayer = ~0;
+    [SerializeField] float m_wallCheckHeight = 1.0f;
+    [SerializeField] float m_wallCheckDistance = 1.0f;
+    [SerializeField] float m_wallStickyForce = 100.0f;
+
+    public LayerMask wallLayer { get { return m_wallLayer; } set { m_wallLayer = value; } }
+    public float wallCheckHeight { get { return m_wallCheckHeight; } set { m_wallCheckHeight = value; } }
+    public float wallCheckDistance { get { return m_wallCheckDistance; } set { m_wallCheckDistance = value; } }
+    public float wallStickyForce { get { return m_wallStickyForce; } set { m_wallStickyForce = value; } }
+
+    [Header("WallRunning")]
     [SerializeField] float m_wallRunForce = 5.0f;
     [SerializeField] SimpleTimer m_wallRunTime = new SimpleTimer();
 
-    public LayerMask wallLayer { get { return m_wallLayer; } set { m_wallLayer = value; } }
     public float wallRunForce { get { return m_wallRunForce; } set { m_wallRunForce = value; } }
     public float wallRunTime { get { return m_wallRunTime.completeTime; } set { m_wallRunTime.completeTime = value; } }
 
@@ -85,22 +94,37 @@ public class PlayerController : MonoBehaviour
     public float wallJumpAngleStrength { get { return m_wallJumpAngleStrength; } set { m_wallJumpAngleStrength = Mathf.Clamp(value, 0.0f, 1.0f); } }
     public float wallJumpStrength { get { return m_wallJumpStrength; } set { m_wallJumpStrength = value; } }
 
-    [Header("Detection")]
-    [SerializeField] float m_wallCheckHeight = 1.0f;
-    [SerializeField] float m_wallCheckDistance = 1.0f;
+    [Header("Wall Climb")]
+    [SerializeField] float m_climbForce = 10.0f;
+    [SerializeField] SimpleTimer m_wallClimbTime = new SimpleTimer();
+    [SerializeField] float m_maxWallClimbSpeed = 5.0f;
+    [SerializeField] float m_climbInputAcceleration = 10.0f;
+
+    public float climbForce { get { return m_climbForce; } set { m_climbForce = value; } }
+    public float wallClimbTime { get { return m_wallClimbTime.completeTime; } set { m_wallClimbTime.completeTime = value; } }
+    public float maxWallClimbSpeed { get { return m_maxWallClimbSpeed; } set { m_maxWallClimbSpeed = value; } }
+    public float climbInputAcceleration { get { return m_climbInputAcceleration; } set { m_climbInputAcceleration = value; } }
+
+    // Wall Private Var.
+    // Wall running
     private RaycastHit m_leftWallhit;
     private RaycastHit m_rightWallhit;
     private bool m_wallLeft;
     private bool m_wallRight;
 
+    // Climbing
+    RaycastHit m_frontWallHit;
+    bool m_frontWall = false;
+
     int m_wallRunsLeft = 0;
 
-    public float wallCheckHeight { get { return m_wallCheckHeight; } set { m_wallCheckHeight = value; } }
-    public float wallCheckDistance { get { return m_wallCheckDistance; } set { m_wallCheckDistance = value; } }
     public RaycastHit leftWallhit { get { return m_leftWallhit; } }
     public RaycastHit rightWallhit { get { return m_rightWallhit; } }
     public bool wallLeft { get { return m_wallLeft; } }
     public bool wallRight { get { return m_wallRight; } }
+
+    public RaycastHit frontWallHit { get { return m_frontWallHit; } }
+    public bool frontWall { get { return m_frontWall; } }
 
     public int wallRunsLeft { get { return m_wallRunsLeft; } }
 
@@ -630,14 +654,6 @@ public class PlayerController : MonoBehaviour
     #endregion // WallRunning
 
     #region WallClimb
-    bool m_frontWall = false;
-    RaycastHit m_frontWallHit;
-
-    [SerializeField] float m_climbForce = 10.0f;
-    [SerializeField] SimpleTimer m_wallClimbTime = new SimpleTimer();
-    [SerializeField] float m_wallStickyForce = 100.0f;
-    [SerializeField] float m_maxWallClimbSpeed = 5.0f;
-    [SerializeField] float m_climbInputAcceleration = 10.0f;
 
     public bool TryStartWallClimb ()
     {
