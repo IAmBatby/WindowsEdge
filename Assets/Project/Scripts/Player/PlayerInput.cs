@@ -83,7 +83,7 @@ public class PlayerInput : MonoBehaviour
         moveInput.x = Input.GetAxisRaw("Horizontal") * horizontalScale;
         moveInput.z = Input.GetAxisRaw("Vertical") * forwardScale;
 
-        moveInput = transform.TransformDirection(Vector3.ClampMagnitude(moveInput, 1.0f));
+        moveInput = Vector3.ClampMagnitude(moveInput, 1.0f);
 
         m_controller.SetMoveInput(moveInput);
     }

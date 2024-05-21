@@ -13,12 +13,7 @@ public class DebugInputs : MonoBehaviour
     {
         if (Input.GetKey(KeyCode.Z))
         {
-            m_controller.AddForce(m_controller.transform.forward * debug_force);
-        }
-
-        if (Input.GetKey(KeyCode.E))
-        {
-            Debug.Break();
+            m_controller.TryStartWallClimb();
         }
     }
 }

@@ -108,9 +108,11 @@ public class PlayerController : MonoBehaviour
     [Header("Inputs")]
     [SerializeField] float m_inputScale = 1.0f;
     Vector3 m_moveInput = Vector3.zero;
+    Vector3 m_worldMoveInput = Vector3.zero;
 
     public float inputScale { get { return m_inputScale; } set { m_inputScale = value; } }
     public Vector3 moveInput { get { return m_moveInput; } set { SetMoveInput(value); } }
+    public Vector3 worldMoveInput { get { return m_worldMoveInput; } }
 
     public float fallingVelocity { get { return m_fallingVelocity; } set { m_fallingVelocity = value; } }
 
@@ -140,6 +142,7 @@ public class PlayerController : MonoBehaviour
     public void SetMoveInput(Vector3 input)
     {
         m_moveInput = input;
+        m_worldMoveInput = transform.TransformDirection(input);
     }
 
     void Process(float deltaTime)
@@ -166,7 +169,7 @@ public class PlayerController : MonoBehaviour
     Vector3 CalculateMoveInputAcceleration(float acceleration)
     {
         // Limit player movement if they are moving faster than their max speed.
-        var moveInput = ReorientSlope(m_moveInput) * m_inputScale;
+        var moveInput = ReorientSlope(m_worldMoveInput) * m_inputScale;
         var playerAcceleration = moveInput * acceleration;
         playerAcceleration *= BBB.CharacterPhysics.SimpleDirectionConstraint(moveInput, m_lateralHeading, m_lateralSpeed, m_maxPlayerSpeed);
 
@@ -235,7 +238,11 @@ public class PlayerController : MonoBehaviour
             case PlayerState.Airborne:
                 {
                     Vector3 wallNormal;
-                    if(m_wallRight)
+                    if (m_frontWall)
+                    {
+                        wallNormal = m_frontWallHit.normal;
+                    }
+                    else if (m_wallRight)
                     {
                         wallNormal = m_rightWallhit.normal;
                     }
@@ -248,19 +255,24 @@ public class PlayerController : MonoBehaviour
                         return;
                     }
 
-                    var jumpDir = Vector3.Slerp(wallNormal, Vector3.up, m_wallJumpAngleStrength);
-
-                    ForceJump(jumpDir * m_wallJumpStrength);
+                    WallKick(wallNormal);
                     break;
                 }
             case PlayerState.WallRunning:
                 {
                     Vector3 wallNormal = m_wallRight ? m_rightWallhit.normal : m_leftWallhit.normal;
-                    var jumpDir = Vector3.Slerp(wallNormal, Vector3.up, m_wallJumpAngleStrength);
+
+                    WallKick(wallNormal);
 
                     EnterState(PlayerState.Airborne);
                     m_wallRunsLeft++;
-                    ForceJump(jumpDir * m_wallJumpStrength);
+                    break;
+                }
+            case PlayerState.WallClimbing:
+                {
+                    Vector3 wallNormal = m_frontWallHit.normal;
+                    WallKick(wallNormal);
+                    EnterState(PlayerState.Airborne);
                     break;
                 }
         }
@@ -269,7 +281,17 @@ public class PlayerController : MonoBehaviour
     public void ForceJump(Vector3 direciton)
     {
         m_jumpLockOutTimer.Reset();
-        AddImpulse(direciton * BBB.CharacterPhysics.CalculateJumpForce(m_jumpHeight, Physics.gravity.y * m_gravityScale));
+        direciton = direciton * BBB.CharacterPhysics.CalculateJumpForce(m_jumpHeight, Physics.gravity.y * m_gravityScale);
+        float vertical = direciton.y;
+        direciton.y = 0f;
+        m_fallingVelocity += vertical;
+        AddImpulse(direciton);
+    }
+
+    void WallKick(Vector3 wallNormal)
+    {
+        var jumpDir = Vector3.Slerp(wallNormal, Vector3.up, m_wallJumpAngleStrength);
+        ForceJump(jumpDir * m_wallJumpStrength);
     }
 
     public void SetCharacterHeight(float height)
@@ -292,7 +314,8 @@ public class PlayerController : MonoBehaviour
         Grounded,
         Airborne,
         Jumping,
-        WallRunning
+        WallRunning,
+        WallClimbing
     }
 
     PlayerState m_currentState = PlayerState.Grounded;
@@ -305,20 +328,20 @@ public class PlayerController : MonoBehaviour
         }
         ExitState(m_currentState);
         m_currentState = playerState;
+
+        Debug.Log("Enter:" + playerState.ToString());
         switch (playerState)
         {
             case PlayerState.Grounded:
                 {
-                    Debug.Log("Grounded");
                     m_fallingVelocity = 0.0f;
                     ReorientSlope(m_velocity);
                     break;
                 }
             case PlayerState.Airborne:
                 {
-                    Debug.Log("Air");
                     m_touchedGrass = false;
-                    m_fallingVelocity = m_velocity.y;
+                    m_fallingVelocity += m_velocity.y;
                     m_velocity.y = 0.0f;
                     //m_isJumping = false;
                     break;
@@ -328,11 +351,17 @@ public class PlayerController : MonoBehaviour
                     StartWallRun();
                     break;
                 }
+            case PlayerState.WallClimbing:
+                {
+                    StartWallClimb();
+                    break;
+                }
         }
     }
 
     void ExitState(PlayerState playerState)
     {
+        Debug.Log("Exit:" + playerState.ToString());
         switch (playerState)
         {
             case PlayerState.Grounded:
@@ -346,6 +375,11 @@ public class PlayerController : MonoBehaviour
             case PlayerState.WallRunning:
                 {
                     StopWallRun();
+                    break;
+                }
+            case PlayerState.WallClimbing:
+                {
+                    StopWallClimb();
                     break;
                 }
         }
@@ -368,6 +402,11 @@ public class PlayerController : MonoBehaviour
             case PlayerState.WallRunning:
                 {
                     WallRunProcess(Time.deltaTime);
+                    break;
+                }
+            case PlayerState.WallClimbing:
+                {
+                    WallClimbProcess(Time.deltaTime);
                     break;
                 }
         }
@@ -473,6 +512,26 @@ public class PlayerController : MonoBehaviour
         m_impulseAccumulator += BBB.CharacterPhysics.AddDrag(m_heading, m_currentSpeed, m_acceleration * m_airBrakingScale, deltaTime);
     }
 
+    void WallClimbProcess(float deltaTime)
+    {
+        WallClimbUpdate();
+
+        //ProcessAcceleration(deltaTime);
+        var impulse = ConsumeAccumulators(deltaTime);
+
+        ////////// Don't need to use move input, but it would be nice to consider in the future.
+        // Limit player movement if they are moving faster than their max speed.
+        impulse += CalculateMoveInputAcceleration(m_climbInputAcceleration) * deltaTime;
+
+        // An Absolute maximum speed.
+        impulse += BBB.CharacterPhysics.SimpleLimit(m_lateralHeading, m_lateralSpeed, m_absoluteMaxSpeed);
+
+        SetVelocity(m_velocity + impulse);
+
+        //Friction(deltaTime);
+        m_impulseAccumulator += BBB.CharacterPhysics.AddDrag(m_heading, m_currentSpeed, m_acceleration * m_airBrakingScale, deltaTime);
+    }
+
     #region Wallrunning
     public bool TryStartWallRun()
     {
@@ -511,6 +570,8 @@ public class PlayerController : MonoBehaviour
         var pos = transform.position + transform.up * m_wallCheckHeight;
         m_wallRight = Physics.Raycast(pos, transform.right, out m_rightWallhit, m_wallCheckDistance, m_wallLayer);
         m_wallLeft = Physics.Raycast(pos, -transform.right, out m_leftWallhit, m_wallCheckDistance, m_wallLayer);
+
+        m_frontWall = Physics.Raycast(pos, transform.forward, out m_frontWallHit, m_wallCheckDistance, m_wallLayer);
     }
 
     private bool AboveGround()
@@ -530,7 +591,6 @@ public class PlayerController : MonoBehaviour
 
     private void StartWallRun()
     {
-        Debug.Log("Start Wall Run");
         this.fallingVelocity = 0.0f;
 
         m_wallRunsLeft--;
@@ -559,15 +619,103 @@ public class PlayerController : MonoBehaviour
         if (!(m_wallLeft && m_moveInput.x > 0) && !(m_wallRight && m_moveInput.x < 0))
         {
             //rb.AddForce(-wallNormal * 100, ForceMode.Force);
-            AddForce(-wallNormal * 100);
+            AddForce(-wallNormal * m_wallStickyForce);
         }
     }
 
     private void StopWallRun()
     {
-        Debug.Log("Stop Wall Run");
+        
     }
-    #endregion
+    #endregion // WallRunning
+
+    #region WallClimb
+    bool m_frontWall = false;
+    RaycastHit m_frontWallHit;
+
+    [SerializeField] float m_climbForce = 10.0f;
+    [SerializeField] SimpleTimer m_wallClimbTime = new SimpleTimer();
+    [SerializeField] float m_wallStickyForce = 100.0f;
+    [SerializeField] float m_maxWallClimbSpeed = 5.0f;
+    [SerializeField] float m_climbInputAcceleration = 10.0f;
+
+    public bool TryStartWallClimb ()
+    {
+        if (m_currentState != PlayerState.WallClimbing)
+        {
+            if (StartWallClimbCondition())
+            {
+                EnterState(PlayerState.WallClimbing);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    void StartWallClimb()
+    {
+        m_wallClimbTime.Reset();
+    }
+
+    void StopWallClimb()
+    {
+        
+    }
+
+    void WallClimbUpdate()
+    {
+        // State 1 - Wallrunning
+        if (ContinueWallClimbCondition())
+        {
+            if (m_wallClimbTime.Tick(Time.deltaTime))
+            {
+                EnterState(PlayerState.Airborne);
+            }
+        }
+        else
+        {
+            EnterState(PlayerState.Airborne);
+        }
+
+        WallClimbingMovement();
+    }
+
+    bool StartWallClimbCondition()
+    {
+        return m_frontWall;
+    }
+
+    bool ContinueWallClimbCondition()
+    {
+        return m_frontWall;
+    }
+
+    void WallClimbingMovement()
+    {
+        Vector3 wallNormal = m_frontWallHit.normal;
+
+        // up force
+        //AddForce(transform.up * m_climbForce * m_moveInput.z);
+
+        //float toMax = m_maxWallClimbSpeed - m_fallingVelocity;
+        //if(toMax > 0.0f)
+        //{
+        //    m_fallingVelocity += m_climbForce * m_moveInput.z * Time.deltaTime;
+        //}
+
+        var thing = Mathf.Min((m_maxWallClimbSpeed * m_moveInput.z) - m_fallingVelocity, m_maxWallClimbSpeed);
+        m_fallingVelocity += thing * m_climbForce * Time.deltaTime;
+
+        // push to wall force
+        if (m_moveInput.z > 0)
+        {
+            //rb.AddForce(-wallNormal * 100, ForceMode.Force);
+            AddForce(-wallNormal * m_wallStickyForce);
+        }
+    }
+
+    #endregion // WallClimb
 
     private void OnControllerColliderHit(ControllerColliderHit hit)
     {
@@ -585,7 +733,7 @@ public class PlayerController : MonoBehaviour
     {
         Gizmos.color = Color.red;
         var pos = transform.position;
-        Gizmos.DrawLine(pos, pos + ReorientSlope(m_moveInput));
+        Gizmos.DrawLine(pos, pos + ReorientSlope(m_worldMoveInput));
 
         Gizmos.color = Color.yellow;
         Gizmos.DrawLine(pos, pos + Vector3.down * (m_groundRayLength + m_charController.skinWidth));
@@ -597,9 +745,28 @@ public class PlayerController : MonoBehaviour
         Gizmos.color = Color.blue;
         Gizmos.DrawLine(pos, pos + slopeLateral);
 
-        Gizmos.color = Color.cyan;
+        // Wall checks
         var wallCheckPos = transform.position + transform.up * m_wallCheckHeight;
+        // right
+        Gizmos.color = Color.cyan;
+        if(m_wallRight)
+        {
+            Gizmos.color = Color.magenta;
+        }
         Gizmos.DrawLine(wallCheckPos, wallCheckPos + transform.right * m_wallCheckDistance);
+        // left
+        Gizmos.color = Color.cyan;
+        if (m_wallLeft)
+        {
+            Gizmos.color = Color.magenta;
+        }
         Gizmos.DrawLine(wallCheckPos, wallCheckPos - transform.right * m_wallCheckDistance);
+        // front
+        Gizmos.color = Color.cyan;
+        if (m_frontWall)
+        {
+            Gizmos.color = Color.magenta;
+        }
+        Gizmos.DrawLine(wallCheckPos, wallCheckPos + transform.forward * m_wallCheckDistance);
     }
 }
