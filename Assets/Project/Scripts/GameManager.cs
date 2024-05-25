@@ -117,7 +117,7 @@ public class GameManager : MonoBehaviour
             if (playerController != null)
             {
                 MenuManager.Instance.speedText.text = Mathf.RoundToInt(playerController.lateralSpeed) + "km/h";
-                MenuManager.Instance.speedImage.fillAmount = playerController.lateralSpeed / playerController.maxPlayerSpeed;
+                MenuManager.Instance.speedImage.fillAmount = playerController.lateralSpeed / playerController.settings.maxPlayerSpeed;
             }
         }
     }

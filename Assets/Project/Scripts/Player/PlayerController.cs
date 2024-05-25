@@ -6,24 +6,11 @@ using UnityEngine.EventSystems;
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] CharacterController m_charController;
+    [SerializeField] PlayerProfile m_settings;
 
-    [Header("Movement")]
-    [SerializeField] float m_acceleration = 5.0f;
-    [SerializeField] float m_airAcceleration = 2.5f;
-    [SerializeField] float m_brakingScale = 0.6f;
-    [SerializeField] float m_airBrakingScale = 0.1f;
+    public PlayerProfile settings { get { return m_settings; } set { m_settings = value; } }
 
-    [SerializeField] float m_maxPlayerSpeed = 5.0f;
-    [SerializeField] float m_absoluteMaxSpeed = 50.0f;
-
-    public float acceleration { get { return m_acceleration; } set { m_acceleration = value; } }
-    public float airAcceleration { get { return m_airAcceleration; } set { m_airAcceleration = value; } }
-    public float brakingScale { get { return m_brakingScale; } set { m_brakingScale = value; } }
-    public float airBrakingScale { get { return m_airBrakingScale; } set { m_airBrakingScale = value; } }
-    public float maxPlayerSpeed { get { return m_maxPlayerSpeed; } set { m_maxPlayerSpeed = value; } }
-    public float absoluteMaxSpeed { get { return m_absoluteMaxSpeed; } set { m_absoluteMaxSpeed = value; } }
-
-
+    // Movement Var.
     Vector3 m_velocity = Vector3.zero;
     float m_currentSpeed = 0.0f;
     Vector3 m_heading = Vector3.forward;
@@ -43,69 +30,44 @@ public class PlayerController : MonoBehaviour
     public float lateralSpeed { get { return (m_lateralSpeed); } }
     public Vector3 lateralHeading { get { return m_heading; } }
 
-    [Header("Jumping")]
-    [SerializeField] float m_jumpHeight = 2.0f;
-    [SerializeField] float m_gravityScale = 1.0f;
-    [SerializeField] SimpleTimer m_jumpLockOutTimer = new SimpleTimer();
+    public Vector3 totalVelocity { get { return (Vector3.up * m_fallingVelocity + m_velocity); } }
+
+    // Current State
+    PlayerState m_currentState = PlayerState.Grounded;
+    public PlayerState currentState { get { return m_currentState; } }
+
+    // Crouching Var
+    bool m_isCrouched = false;
+
+    float m_targetHeightSmooth = 1.0f;
+    float m_smoothCrouchScale = 1.0f;
+    float m_smoothCrouchVel = 0.0f;
+
+    public bool isCrouched { get { return m_isCrouched; } }
+    public float smoothCrouchScale { get { return m_smoothCrouchScale; } }
+
+    // Jumping and Gravity Var.
+    SimpleTimer m_jumpLockOutTimer = new SimpleTimer();
 
     float m_fallingVelocity = 0.0f;
 
     bool m_isJumping = false;
     bool m_touchedGrass = false;
 
-    public float jumpHeight { get { return m_jumpHeight; } set { m_jumpHeight = value; } }
-    public float gravityScale { get { return m_gravityScale; } set { m_gravityScale = value; } }
-    public float jumpLockoutTime { get { return m_jumpLockOutTimer.completeTime; } set { m_jumpLockOutTimer.completeTime = value; } }
+    public float fallingVelocity { get { return m_fallingVelocity; } set { m_fallingVelocity = value; } }
 
-    [Header("GroundChecking")]
-    [SerializeField] float m_groundRayLength = 0.1f;
-    [SerializeField] LayerMask m_groundLayer = ~0;
-    [SerializeField] Vector3 m_groundNormal = Vector3.up;
-
+    // Ground Detection Var.
+    Vector3 m_groundNormal = Vector3.up;
     bool m_groundIsDetected = false;
 
-    public float groundRayLength { get { return m_groundRayLength; } set { m_groundRayLength = value; } }
-    public LayerMask groundLayer { get { return m_groundLayer; } set { m_groundLayer = value; } }
     public Vector3 groundNormal { get { return m_groundNormal; } }
     public bool groundIsDetected { get { return m_groundIsDetected; } }
+    public bool isGrounded { get { return m_currentState == PlayerState.Grounded; } }
+    public bool isGroundDetected { get { return m_groundIsDetected; } }
 
-    [Header("Wall General")]
-    [SerializeField] LayerMask m_wallLayer = ~0;
-    [SerializeField] float m_wallCheckHeight = 1.0f;
-    [SerializeField] float m_wallCheckDistance = 1.0f;
-    [SerializeField] float m_wallStickyForce = 100.0f;
+    // Wall Interaction Var.
 
-    public LayerMask wallLayer { get { return m_wallLayer; } set { m_wallLayer = value; } }
-    public float wallCheckHeight { get { return m_wallCheckHeight; } set { m_wallCheckHeight = value; } }
-    public float wallCheckDistance { get { return m_wallCheckDistance; } set { m_wallCheckDistance = value; } }
-    public float wallStickyForce { get { return m_wallStickyForce; } set { m_wallStickyForce = value; } }
-
-    [Header("WallRunning")]
-    [SerializeField] float m_wallRunForce = 5.0f;
-    [SerializeField] SimpleTimer m_wallRunTime = new SimpleTimer();
-
-    public float wallRunForce { get { return m_wallRunForce; } set { m_wallRunForce = value; } }
-    public float wallRunTime { get { return m_wallRunTime.completeTime; } set { m_wallRunTime.completeTime = value; } }
-
-    [Header("WallJump")]
-    [SerializeField, Range(0.0f, 1.0f)] float m_wallJumpAngleStrength = 0.5f;
-    [SerializeField] float m_wallJumpStrength = 1.0f;
-
-    public float wallJumpAngleStrength { get { return m_wallJumpAngleStrength; } set { m_wallJumpAngleStrength = Mathf.Clamp(value, 0.0f, 1.0f); } }
-    public float wallJumpStrength { get { return m_wallJumpStrength; } set { m_wallJumpStrength = value; } }
-
-    [Header("Wall Climb")]
-    [SerializeField] float m_climbForce = 10.0f;
-    [SerializeField] SimpleTimer m_wallClimbTime = new SimpleTimer();
-    [SerializeField] float m_maxWallClimbSpeed = 5.0f;
-    [SerializeField] float m_climbInputAcceleration = 10.0f;
-
-    public float climbForce { get { return m_climbForce; } set { m_climbForce = value; } }
-    public float wallClimbTime { get { return m_wallClimbTime.completeTime; } set { m_wallClimbTime.completeTime = value; } }
-    public float maxWallClimbSpeed { get { return m_maxWallClimbSpeed; } set { m_maxWallClimbSpeed = value; } }
-    public float climbInputAcceleration { get { return m_climbInputAcceleration; } set { m_climbInputAcceleration = value; } }
-
-    // Wall Private Var.
+    // Wall Deteciton
     // Wall running
     private RaycastHit m_leftWallhit;
     private RaycastHit m_rightWallhit;
@@ -116,8 +78,6 @@ public class PlayerController : MonoBehaviour
     RaycastHit m_frontWallHit;
     bool m_frontWall = false;
 
-    int m_wallRunsLeft = 0;
-
     public RaycastHit leftWallhit { get { return m_leftWallhit; } }
     public RaycastHit rightWallhit { get { return m_rightWallhit; } }
     public bool wallLeft { get { return m_wallLeft; } }
@@ -126,7 +86,10 @@ public class PlayerController : MonoBehaviour
     public RaycastHit frontWallHit { get { return m_frontWallHit; } }
     public bool frontWall { get { return m_frontWall; } }
 
+    // Wall Interaction playability
+    int m_wallRunsLeft = 0;
     public int wallRunsLeft { get { return m_wallRunsLeft; } }
+    SimpleTimer m_wallInteractTimer = new SimpleTimer();
 
     // Inputs
     [Header("Inputs")]
@@ -138,12 +101,35 @@ public class PlayerController : MonoBehaviour
     public Vector3 moveInput { get { return m_moveInput; } set { SetMoveInput(value); } }
     public Vector3 worldMoveInput { get { return m_worldMoveInput; } }
 
-    public float fallingVelocity { get { return m_fallingVelocity; } set { m_fallingVelocity = value; } }
-
     public bool inputDisabled { get { return m_inputScale == 0.0f; } set { m_inputScale = System.Convert.ToSingle(!value); } }
 
-    public bool isGrounded { get { return m_currentState == PlayerState.Grounded; } }
-    public bool isGroundDetected { get { return m_groundIsDetected;} }
+    // Movement Var
+    float m_targetBrakeScale;
+    float m_targetMaxSpeed;
+
+    float m_speedScale = 1.0f;
+
+    public float speedScale { get { return m_speedScale; } set { m_speedScale = value; } }
+
+    public enum PlayerState
+    {
+        Grounded,
+        Airborne,
+        Jumping,
+        WallRunning,
+        WallClimbing
+    }
+
+    private void Start()
+    {
+        m_smoothCrouchScale = 1.0f;
+        Stand();
+    }
+
+    private void Update()
+    {
+        SmoothHeightTowards(m_targetHeightSmooth);
+    }
 
     //public float MaxPlayerSpeed { get { return (m_maxPlayerSpeed); } set { m_maxPlayerSpeed = value; } }
     //public float CurrentPlayerSpeed { get { return (m_lateralSpeed); } set { m_lateralSpeed = value; } }
@@ -153,6 +139,13 @@ public class PlayerController : MonoBehaviour
         Process(Time.deltaTime);
     }
 
+    public void SetMoveInput(Vector3 input)
+    {
+        m_moveInput = input;
+        m_worldMoveInput = transform.TransformDirection(input);
+    }
+
+    #region Physics
     public void AddForce(Vector3 force)
     {
         m_forceAccumulator += force;
@@ -161,12 +154,6 @@ public class PlayerController : MonoBehaviour
     public void AddImpulse(Vector3 impulse)
     {
         m_impulseAccumulator += impulse;
-    }
-
-    public void SetMoveInput(Vector3 input)
-    {
-        m_moveInput = input;
-        m_worldMoveInput = transform.TransformDirection(input);
     }
 
     void Process(float deltaTime)
@@ -195,7 +182,7 @@ public class PlayerController : MonoBehaviour
         // Limit player movement if they are moving faster than their max speed.
         var moveInput = ReorientSlope(m_worldMoveInput) * m_inputScale;
         var playerAcceleration = moveInput * acceleration;
-        playerAcceleration *= BBB.CharacterPhysics.SimpleDirectionConstraint(moveInput, m_lateralHeading, m_lateralSpeed, m_maxPlayerSpeed);
+        playerAcceleration *= BBB.CharacterPhysics.SimpleDirectionConstraint(moveInput, m_lateralHeading, m_lateralSpeed, m_targetMaxSpeed * speedScale);
 
         return playerAcceleration;
     }
@@ -227,12 +214,12 @@ public class PlayerController : MonoBehaviour
 
     void ProcessMovement(float deltaTime)
     {
-        var collisionFlag = m_charController.Move((Vector3.up * m_fallingVelocity + m_velocity) * Time.deltaTime);
+        var collisionFlag = m_charController.Move(totalVelocity * Time.deltaTime);
     }
 
     Vector3 Gravity()
     {
-        return Physics.gravity * m_gravityScale * Time.deltaTime;
+        return Physics.gravity * m_settings.gravityScale * Time.deltaTime;
     }
 
     Vector3 BottomPos()
@@ -242,17 +229,34 @@ public class PlayerController : MonoBehaviour
 
     bool GroundRay(out RaycastHit hitInfo)
     {
-        return Physics.Raycast(transform.position, Vector3.down, out hitInfo, m_groundRayLength + m_charController.skinWidth, m_groundLayer, QueryTriggerInteraction.Ignore);
+        return Physics.Raycast(transform.position, Vector3.down, out hitInfo, m_settings.groundRayLength + m_charController.skinWidth, m_settings.groundLayer, QueryTriggerInteraction.Ignore);
     }
 
+    public void SetCharacterHeight(float height)
+    {
+        var center = m_charController.center;
+        float m_centerHeightScale = center.y / m_charController.height;
+        m_charController.height = height;
+
+        center.y = m_centerHeightScale * height;
+        m_charController.center = center;
+    }
+
+    public Vector3 ReorientSlope(Vector3 move)
+    {
+        return Vector3.ProjectOnPlane(move, m_groundNormal);
+    }
+    #endregion // Physics
+
+    #region Actions
     public void TryJump()
     {
-        if(m_isJumping)
+        if (m_isJumping)
         {
             return;
         }
 
-        switch(m_currentState)
+        switch (m_currentState)
         {
             case PlayerState.Grounded:
                 {
@@ -270,7 +274,7 @@ public class PlayerController : MonoBehaviour
                     {
                         wallNormal = m_rightWallhit.normal;
                     }
-                    else if(m_wallLeft)
+                    else if (m_wallLeft)
                     {
                         wallNormal = m_leftWallhit.normal;
                     }
@@ -304,8 +308,9 @@ public class PlayerController : MonoBehaviour
 
     public void ForceJump(Vector3 direciton)
     {
+        m_jumpLockOutTimer.completeTime = m_settings.jumpLockoutTime;
         m_jumpLockOutTimer.Reset();
-        direciton = direciton * BBB.CharacterPhysics.CalculateJumpForce(m_jumpHeight, Physics.gravity.y * m_gravityScale);
+        direciton = direciton * BBB.CharacterPhysics.CalculateJumpForce(m_settings.jumpHeight, Physics.gravity.y * m_settings.gravityScale);
         float vertical = direciton.y;
         direciton.y = 0f;
         m_fallingVelocity += vertical;
@@ -314,36 +319,12 @@ public class PlayerController : MonoBehaviour
 
     void WallKick(Vector3 wallNormal)
     {
-        var jumpDir = Vector3.Slerp(wallNormal, Vector3.up, m_wallJumpAngleStrength);
-        ForceJump(jumpDir * m_wallJumpStrength);
+        var jumpDir = Vector3.Slerp(wallNormal, Vector3.up, m_settings.wallJumpAngleStrength);
+        ForceJump(jumpDir * m_settings.wallJumpStrength);
     }
+    #endregion // Actions
 
-    public void SetCharacterHeight(float height)
-    {
-        var center = m_charController.center;
-        float m_centerHeightScale = center.y / m_charController.height;
-        m_charController.height = height;
-
-        center.y = m_centerHeightScale * height;
-        m_charController.center = center;
-    }
-
-    public Vector3 ReorientSlope(Vector3 move)
-    {
-        return Vector3.ProjectOnPlane(move, m_groundNormal);
-    }
-
-    enum PlayerState
-    {
-        Grounded,
-        Airborne,
-        Jumping,
-        WallRunning,
-        WallClimbing
-    }
-
-    PlayerState m_currentState = PlayerState.Grounded;
-
+    #region StateManagement
     void EnterState(PlayerState playerState)
     {
         if(playerState == m_currentState)
@@ -459,15 +440,15 @@ public class PlayerController : MonoBehaviour
         var impulse = ConsumeAccumulators(deltaTime);
 
         // Limit player movement if they are moving faster than their max speed.
-        impulse += CalculateMoveInputAcceleration(m_acceleration) * deltaTime;
+        impulse += CalculateMoveInputAcceleration(m_settings.acceleration) * deltaTime;
 
         // An Absolute maximum speed.
-        impulse += BBB.CharacterPhysics.SimpleLimit(m_lateralHeading, m_lateralSpeed, m_absoluteMaxSpeed);
+        impulse += BBB.CharacterPhysics.SimpleLimit(m_lateralHeading, m_lateralSpeed, m_settings.absoluteMaxSpeed);
 
         SetVelocity(m_velocity + impulse);
 
         //Friction(deltaTime);
-        m_impulseAccumulator += BBB.CharacterPhysics.AddDrag(m_heading, m_currentSpeed, m_acceleration * m_brakingScale, deltaTime);
+        m_impulseAccumulator += BBB.CharacterPhysics.AddDrag(m_heading, m_currentSpeed, m_settings.acceleration * m_targetBrakeScale, deltaTime);
     }
 
     void AirProcess(float deltaTime)
@@ -499,10 +480,10 @@ public class PlayerController : MonoBehaviour
         var impulse = ConsumeAccumulators(deltaTime);
 
         // Limit player movement if they are moving faster than their max speed.
-        impulse += CalculateMoveInputAcceleration(m_airAcceleration) * deltaTime;
+        impulse += CalculateMoveInputAcceleration(m_settings.airAcceleration) * deltaTime;
 
         // An Absolute maximum speed.
-        impulse += BBB.CharacterPhysics.SimpleLimit(m_lateralHeading, m_lateralSpeed, m_absoluteMaxSpeed);
+        impulse += BBB.CharacterPhysics.SimpleLimit(m_lateralHeading, m_lateralSpeed, m_settings.absoluteMaxSpeed);
 
         // Add Gravity
         if(!isGrounded)
@@ -513,7 +494,7 @@ public class PlayerController : MonoBehaviour
         SetVelocity(m_velocity + impulse);
 
         //Friction(deltaTime);
-        m_impulseAccumulator += BBB.CharacterPhysics.AddDrag(m_heading, m_currentSpeed, m_acceleration * m_airBrakingScale, deltaTime);
+        m_impulseAccumulator += BBB.CharacterPhysics.AddDrag(m_heading, m_currentSpeed, m_settings.acceleration * m_settings.airBrakingScale, deltaTime);
     }
 
     void WallRunProcess(float deltaTime)
@@ -528,12 +509,12 @@ public class PlayerController : MonoBehaviour
         //impulse += CalculateMoveInputAcceleration(m_airAcceleration) * deltaTime;
 
         // An Absolute maximum speed.
-        impulse += BBB.CharacterPhysics.SimpleLimit(m_lateralHeading, m_lateralSpeed, m_absoluteMaxSpeed);
+        impulse += BBB.CharacterPhysics.SimpleLimit(m_lateralHeading, m_lateralSpeed, m_settings.absoluteMaxSpeed);
 
         SetVelocity(m_velocity + impulse);
 
         //Friction(deltaTime);
-        m_impulseAccumulator += BBB.CharacterPhysics.AddDrag(m_heading, m_currentSpeed, m_acceleration * m_airBrakingScale, deltaTime);
+        m_impulseAccumulator += BBB.CharacterPhysics.AddDrag(m_heading, m_currentSpeed, m_settings.acceleration * m_settings.airBrakingScale, deltaTime);
     }
 
     void WallClimbProcess(float deltaTime)
@@ -545,16 +526,45 @@ public class PlayerController : MonoBehaviour
 
         ////////// Don't need to use move input, but it would be nice to consider in the future.
         // Limit player movement if they are moving faster than their max speed.
-        impulse += CalculateMoveInputAcceleration(m_climbInputAcceleration) * deltaTime;
+        impulse += CalculateMoveInputAcceleration(m_settings.climbInputAcceleration) * deltaTime;
 
         // An Absolute maximum speed.
-        impulse += BBB.CharacterPhysics.SimpleLimit(m_lateralHeading, m_lateralSpeed, m_absoluteMaxSpeed);
+        impulse += BBB.CharacterPhysics.SimpleLimit(m_lateralHeading, m_lateralSpeed, m_settings.absoluteMaxSpeed);
 
         SetVelocity(m_velocity + impulse);
 
         //Friction(deltaTime);
-        m_impulseAccumulator += BBB.CharacterPhysics.AddDrag(m_heading, m_currentSpeed, m_acceleration * m_airBrakingScale, deltaTime);
+        m_impulseAccumulator += BBB.CharacterPhysics.AddDrag(m_heading, m_currentSpeed, m_settings.acceleration * m_settings.airBrakingScale, deltaTime);
     }
+    #endregion // StateManagement
+
+    #region Crouching
+    public void Crouch()
+    {
+        m_targetBrakeScale = m_settings.brakingScale * m_settings.crouchBrakingScale;
+        m_targetMaxSpeed = m_settings.maxPlayerSpeed * m_settings.crouchSpeedScale;
+
+        m_targetHeightSmooth = m_settings.crouchHeightScale;
+
+        m_isCrouched = true;
+    }
+
+    public void Stand()
+    {
+        m_targetBrakeScale = m_settings.brakingScale;
+        m_targetMaxSpeed = m_settings.maxPlayerSpeed;
+
+        m_targetHeightSmooth = 1.0f;
+
+        m_isCrouched = false;
+    }
+
+    void SmoothHeightTowards(float targetScale)
+    {
+        m_smoothCrouchScale = Mathf.SmoothDamp(m_smoothCrouchScale, targetScale, ref m_smoothCrouchVel, m_settings.smoothCrouchTime);
+        SetCharacterHeight(m_settings.standHeight * m_smoothCrouchScale);
+    }
+    #endregion // Crouching
 
     #region Wallrunning
     public bool TryStartWallRun()
@@ -576,7 +586,7 @@ public class PlayerController : MonoBehaviour
         // State 1 - Wallrunning
         if (ContinueWallRunCondition())
         {
-            if(m_wallRunTime.Tick(Time.deltaTime))
+            if(m_wallInteractTimer.Tick(Time.deltaTime))
             {
                 EnterState(PlayerState.Airborne);
             }
@@ -591,11 +601,11 @@ public class PlayerController : MonoBehaviour
 
     private void CheckForWall()
     {
-        var pos = transform.position + transform.up * m_wallCheckHeight;
-        m_wallRight = Physics.Raycast(pos, transform.right, out m_rightWallhit, m_wallCheckDistance, m_wallLayer);
-        m_wallLeft = Physics.Raycast(pos, -transform.right, out m_leftWallhit, m_wallCheckDistance, m_wallLayer);
+        var pos = transform.position + transform.up * m_settings.wallCheckHeight;
+        m_wallRight = Physics.Raycast(pos, transform.right, out m_rightWallhit, m_settings.wallCheckDistance, m_settings.wallLayer);
+        m_wallLeft = Physics.Raycast(pos, -transform.right, out m_leftWallhit, m_settings.wallCheckDistance, m_settings.wallLayer);
 
-        m_frontWall = Physics.Raycast(pos, transform.forward, out m_frontWallHit, m_wallCheckDistance, m_wallLayer);
+        m_frontWall = Physics.Raycast(pos, transform.forward, out m_frontWallHit, m_settings.wallCheckDistance, m_settings.wallLayer);
     }
 
     private bool AboveGround()
@@ -619,7 +629,8 @@ public class PlayerController : MonoBehaviour
 
         m_wallRunsLeft--;
 
-        m_wallRunTime.Reset();
+        m_wallInteractTimer.completeTime = m_settings.wallRunTime;
+        m_wallInteractTimer.Reset();
     }
 
     private void WallRunningMovement()
@@ -637,13 +648,13 @@ public class PlayerController : MonoBehaviour
 
         // forward force
         //rb.AddForce(wallForward * wallRunForce, ForceMode.Force);
-        AddForce(wallForward * m_wallRunForce);
+        AddForce(wallForward * m_settings.wallRunForce);
 
         // push to wall force
         if (!(m_wallLeft && m_moveInput.x > 0) && !(m_wallRight && m_moveInput.x < 0))
         {
             //rb.AddForce(-wallNormal * 100, ForceMode.Force);
-            AddForce(-wallNormal * m_wallStickyForce);
+            AddForce(-wallNormal * m_settings.wallStickyForce);
         }
     }
 
@@ -671,7 +682,8 @@ public class PlayerController : MonoBehaviour
 
     void StartWallClimb()
     {
-        m_wallClimbTime.Reset();
+        m_wallInteractTimer.completeTime = m_settings.wallClimbTime;
+        m_wallInteractTimer.Reset();
     }
 
     void StopWallClimb()
@@ -684,7 +696,7 @@ public class PlayerController : MonoBehaviour
         // State 1 - Wallrunning
         if (ContinueWallClimbCondition())
         {
-            if (m_wallClimbTime.Tick(Time.deltaTime))
+            if (m_wallInteractTimer.Tick(Time.deltaTime))
             {
                 EnterState(PlayerState.Airborne);
             }
@@ -720,14 +732,14 @@ public class PlayerController : MonoBehaviour
         //    m_fallingVelocity += m_climbForce * m_moveInput.z * Time.deltaTime;
         //}
 
-        var thing = Mathf.Min((m_maxWallClimbSpeed * m_moveInput.z) - m_fallingVelocity, m_maxWallClimbSpeed);
-        m_fallingVelocity += thing * m_climbForce * Time.deltaTime;
+        var thing = Mathf.Min((m_settings.maxWallClimbSpeed * m_moveInput.z) - m_fallingVelocity, m_settings.maxWallClimbSpeed);
+        m_fallingVelocity += thing * m_settings.climbForce * Time.deltaTime;
 
         // push to wall force
         if (m_moveInput.z > 0)
         {
             //rb.AddForce(-wallNormal * 100, ForceMode.Force);
-            AddForce(-wallNormal * m_wallStickyForce);
+            AddForce(-wallNormal * m_settings.wallStickyForce);
         }
     }
 
@@ -752,7 +764,7 @@ public class PlayerController : MonoBehaviour
         Gizmos.DrawLine(pos, pos + ReorientSlope(m_worldMoveInput));
 
         Gizmos.color = Color.yellow;
-        Gizmos.DrawLine(pos, pos + Vector3.down * (m_groundRayLength + m_charController.skinWidth));
+        Gizmos.DrawLine(pos, pos + Vector3.down * (m_settings.groundRayLength + m_charController.skinWidth));
 
         Gizmos.DrawCube(BottomPos(), Vector3.one * 0.2f);
 
@@ -762,27 +774,27 @@ public class PlayerController : MonoBehaviour
         Gizmos.DrawLine(pos, pos + slopeLateral);
 
         // Wall checks
-        var wallCheckPos = transform.position + transform.up * m_wallCheckHeight;
+        var wallCheckPos = transform.position + transform.up * m_settings.wallCheckHeight;
         // right
         Gizmos.color = Color.cyan;
         if(m_wallRight)
         {
             Gizmos.color = Color.magenta;
         }
-        Gizmos.DrawLine(wallCheckPos, wallCheckPos + transform.right * m_wallCheckDistance);
+        Gizmos.DrawLine(wallCheckPos, wallCheckPos + transform.right * m_settings.wallCheckDistance);
         // left
         Gizmos.color = Color.cyan;
         if (m_wallLeft)
         {
             Gizmos.color = Color.magenta;
         }
-        Gizmos.DrawLine(wallCheckPos, wallCheckPos - transform.right * m_wallCheckDistance);
+        Gizmos.DrawLine(wallCheckPos, wallCheckPos - transform.right * m_settings.wallCheckDistance);
         // front
         Gizmos.color = Color.cyan;
         if (m_frontWall)
         {
             Gizmos.color = Color.magenta;
         }
-        Gizmos.DrawLine(wallCheckPos, wallCheckPos + transform.forward * m_wallCheckDistance);
+        Gizmos.DrawLine(wallCheckPos, wallCheckPos + transform.forward * m_settings.wallCheckDistance);
     }
 }

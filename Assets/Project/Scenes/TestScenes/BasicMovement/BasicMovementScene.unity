@@ -2645,38 +2645,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_charController: {fileID: 3689541001426528088}
-  m_acceleration: 75
-  m_airAcceleration: 25
-  m_brakingScale: 0.6
-  m_airBrakingScale: 0.1
-  m_maxPlayerSpeed: 10
-  m_absoluteMaxSpeed: 50
-  m_jumpHeight: 2
-  m_gravityScale: 1
-  m_jumpLockOutTimer:
-    completeTime: 0.1
-  m_groundRayLength: 0.1
-  m_groundLayer:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_groundNormal: {x: 0, y: 1, z: 0}
-  m_wallLayer:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_wallRunForce: 5
-  m_wallRunTime:
-    completeTime: 1
-  m_wallJumpAngleStrength: 0.5
-  m_wallJumpStrength: 1
-  m_wallCheckHeight: 1
-  m_wallCheckDistance: 1
+  m_settings: {fileID: 11400000, guid: 9bca40d72a609e040b31edca0685d8bc, type: 2}
   m_inputScale: 1
-  m_climbForce: 10
-  m_wallClimbTime:
-    completeTime: 1
-  m_wallStickyForce: 100
-  m_maxWallClimbSpeed: 5
-  m_climbInputAcceleration: 10
 --- !u!4 &1172390567265812524
 Transform:
   m_ObjectHideFlags: 0
@@ -2726,16 +2696,8 @@ MonoBehaviour:
   m_camHead: {fileID: 5103797113312270391}
   m_cameraSens: 1
   m_camClamp: {x: -89, y: 89}
-  m_standBrake: 0.6
-  m_crouchBrake: 0.1
-  m_playerSpeed: 10
-  m_crouchSpeedScale: 0.5
-  m_runSpeedScale: 1.5
-  m_standHeight: 2
-  m_crouchHeightScale: 0.5
   m_camHeight: 1.6
   m_debug_model: {fileID: 1079500160}
-  m_smoothCrouchTime: 0.1
 --- !u!20 &2646694706966219459
 Camera:
   m_ObjectHideFlags: 0
