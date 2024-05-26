@@ -2698,6 +2698,8 @@ MonoBehaviour:
   m_camClamp: {x: -89, y: 89}
   m_camHeight: 1.6
   m_debug_model: {fileID: 1079500160}
+  m_climbDegrees: 35
+  m_minSpeedWallRunEngage: 2
 --- !u!20 &2646694706966219459
 Camera:
   m_ObjectHideFlags: 0

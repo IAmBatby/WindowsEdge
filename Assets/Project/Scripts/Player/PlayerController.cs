@@ -608,19 +608,14 @@ public class PlayerController : MonoBehaviour
         m_frontWall = Physics.Raycast(pos, transform.forward, out m_frontWallHit, m_settings.wallCheckDistance, m_settings.wallLayer);
     }
 
-    private bool AboveGround()
-    {
-        return !isGroundDetected;
-    }
-
     bool StartWallRunCondition()
     {
-        return (m_wallLeft || m_wallRight) && AboveGround();
+        return (m_wallLeft || m_wallRight);
     }
 
     bool ContinueWallRunCondition()
     {
-        return (m_wallLeft || m_wallRight) && AboveGround() && this.fallingVelocity <= 0.0f;
+        return (m_wallLeft || m_wallRight) && this.fallingVelocity <= 0.0f;
     }
 
     private void StartWallRun()

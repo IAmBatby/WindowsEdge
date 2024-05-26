@@ -15,10 +15,15 @@ public class PlayerInput : MonoBehaviour
 
     [SerializeField] Transform m_debug_model;
 
+    [SerializeField] float m_climbDegrees = 15.0f;
+    float m_climbDotCheck;
+
+    [SerializeField] float m_minSpeedWallRunEngage = 2.0f;
+
     // Start is called before the first frame update
     void Start()
     {
-
+        m_climbDotCheck = Mathf.Cos(m_climbDegrees * Mathf.Deg2Rad);
     }
 
     // Update is called once per frame
@@ -49,17 +54,14 @@ public class PlayerInput : MonoBehaviour
 
         Move(horizontalScale, forwardScale);
 
-        if (Input.GetAxisRaw("Jump") != 0)
+        if(Input.GetKeyDown(KeyCode.Space))
         {
-            m_controller.TryJump();
-        }
-
-        if (Input.GetMouseButtonDown(1))
-        {
-            m_controller.TryStartWallRun();
+            RisingInput();
         }
 
         Look();
+
+        AirborneWallInteraction();
     }
 
     private void LateUpdate()
@@ -114,5 +116,67 @@ public class PlayerInput : MonoBehaviour
         if (offset > 0)
             current = Mathf.MoveTowardsAngle(current, midAngle, offset);
         return current;
+    }
+
+    // Will do the relevant rising input based on the parameters the player is currently in.
+    // eg. no walls detected and on the ground, causes a jump input.
+    // wall in front and moving towards the wall, causes a wall climb.
+    void RisingInput()
+    {
+        Debug.Log("Rising");
+
+        if(m_controller.frontWall)
+        {
+            float frontWallDot = Vector3.Dot(m_controller.worldMoveInput, -m_controller.frontWallHit.normal);
+            if(frontWallDot > m_climbDotCheck)
+            {
+                if (m_controller.TryStartWallClimb())
+                {
+                    return;
+                }
+            }
+        }
+        if(m_controller.currentSpeed > m_minSpeedWallRunEngage)
+        {
+            if(m_controller.TryStartWallRun())
+            {
+                return;
+            }
+        }
+
+
+        m_controller.TryJump();
+    }
+
+    void AirborneWallInteraction()
+    {
+        if (m_controller.currentState != PlayerController.PlayerState.Airborne || m_controller.totalVelocity.y < 0.0f)
+        {
+            return;
+        }
+
+        if (m_controller.frontWall)
+        {
+            float frontWallDot = Vector3.Dot(m_controller.worldMoveInput, -m_controller.frontWallHit.normal);
+            if (frontWallDot > m_climbDotCheck)
+            {
+                if (m_controller.TryStartWallClimb())
+                {
+                    return;
+                }
+            }
+        }
+        if (m_controller.currentSpeed > m_minSpeedWallRunEngage)
+        {
+            if (m_controller.TryStartWallRun())
+            {
+                return;
+            }
+        }
+    }
+
+    private void OnValidate()
+    {
+        m_climbDotCheck = Mathf.Cos(m_climbDegrees * Mathf.Deg2Rad);
     }
 }
