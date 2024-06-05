@@ -1,12 +1,18 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.EventSystems;
+using UnityEngine.Events;
 
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] CharacterController m_charController;
     [SerializeField] PlayerProfile m_settings;
+
+    [SerializeField] UnityEvent m_changeStateEvent;
+    [SerializeField] UnityEvent m_onGroundedEvent;
+    [SerializeField] UnityEvent m_onAirborneEvent;
+    [SerializeField] UnityEvent m_onWallRunEvent;
+    [SerializeField] UnityEvent m_onWallClimbEvent;
 
     public PlayerProfile settings { get { return m_settings; } set { m_settings = value; } }
 
@@ -334,13 +340,14 @@ public class PlayerController : MonoBehaviour
         ExitState(m_currentState);
         m_currentState = playerState;
 
-        Debug.Log("Enter:" + playerState.ToString());
         switch (playerState)
         {
             case PlayerState.Grounded:
                 {
                     m_fallingVelocity = 0.0f;
                     ReorientSlope(m_velocity);
+
+                    m_onGroundedEvent.Invoke();
                     break;
                 }
             case PlayerState.Airborne:
@@ -349,24 +356,28 @@ public class PlayerController : MonoBehaviour
                     m_fallingVelocity += m_velocity.y;
                     m_velocity.y = 0.0f;
                     //m_isJumping = false;
+
+                    m_onAirborneEvent.Invoke();
                     break;
                 }
             case PlayerState.WallRunning:
                 {
                     StartWallRun();
+                    m_onWallRunEvent.Invoke();
                     break;
                 }
             case PlayerState.WallClimbing:
                 {
                     StartWallClimb();
+                    m_onWallClimbEvent.Invoke();
                     break;
                 }
         }
+        m_changeStateEvent.Invoke();
     }
 
     void ExitState(PlayerState playerState)
     {
-        Debug.Log("Exit:" + playerState.ToString());
         switch (playerState)
         {
             case PlayerState.Grounded:
@@ -454,27 +465,7 @@ public class PlayerController : MonoBehaviour
     void AirProcess(float deltaTime)
     {
         //SetGrounded();
-        if (!m_touchedGrass)
-        {
-            m_touchedGrass = m_charController.isGrounded;
-        }
-        m_groundIsDetected = GroundRay(out RaycastHit hitInfo);
-
-        var isGrounded = m_touchedGrass && m_groundIsDetected;
-
-        if (m_groundIsDetected)
-        {
-            m_groundNormal = hitInfo.normal;
-        }
-        else
-        {
-            m_groundNormal = Vector3.up;
-        }
-
-        if (isGrounded)
-        {
-            EnterState(PlayerState.Grounded);
-        }
+        var isGrounded = TouchGrassTest();
 
         //ProcessAcceleration(deltaTime);
         var impulse = ConsumeAccumulators(deltaTime);
@@ -499,6 +490,7 @@ public class PlayerController : MonoBehaviour
 
     void WallRunProcess(float deltaTime)
     {
+        var isGrounded = TouchGrassTest();
         WallRunUpdate();
 
         //ProcessAcceleration(deltaTime);
@@ -535,6 +527,33 @@ public class PlayerController : MonoBehaviour
 
         //Friction(deltaTime);
         m_impulseAccumulator += BBB.CharacterPhysics.AddDrag(m_heading, m_currentSpeed, m_settings.acceleration * m_settings.airBrakingScale, deltaTime);
+    }
+
+    bool TouchGrassTest()
+    {
+        if (!m_touchedGrass)
+        {
+            m_touchedGrass = m_charController.isGrounded;
+        }
+        m_groundIsDetected = GroundRay(out RaycastHit hitInfo);
+
+        var isGrounded = m_touchedGrass && m_groundIsDetected;
+
+        if (m_groundIsDetected)
+        {
+            m_groundNormal = hitInfo.normal;
+        }
+        else
+        {
+            m_groundNormal = Vector3.up;
+        }
+
+        if (isGrounded)
+        {
+            EnterState(PlayerState.Grounded);
+        }
+
+        return isGrounded;
     }
     #endregion // StateManagement
 
@@ -597,6 +616,8 @@ public class PlayerController : MonoBehaviour
         }
 
         WallRunningMovement();
+
+        m_fallingVelocity += Gravity().y * m_settings.wallRunGravityCurve.Evaluate(m_wallInteractTimer.currentTime / m_wallInteractTimer.completeTime);
     }
 
     private void CheckForWall()
@@ -615,12 +636,12 @@ public class PlayerController : MonoBehaviour
 
     bool ContinueWallRunCondition()
     {
-        return (m_wallLeft || m_wallRight) && this.fallingVelocity <= 0.0f;
+        return (m_wallLeft || m_wallRight);// && this.fallingVelocity >= 0.0f;
     }
 
     private void StartWallRun()
     {
-        this.fallingVelocity = 0.0f;
+        //this.fallingVelocity = 0.0f;
 
         m_wallRunsLeft--;
 
@@ -630,9 +651,9 @@ public class PlayerController : MonoBehaviour
 
     private void WallRunningMovement()
     {
-        var velocity = this.velocity;
-        velocity.y = 0.0f;
-        this.SetVelocity(velocity);
+        //var velocity = this.velocity;
+        //velocity.y = 0.0f;
+        //this.SetVelocity(velocity);
 
         Vector3 wallNormal = m_wallRight ? m_rightWallhit.normal : m_leftWallhit.normal;
 

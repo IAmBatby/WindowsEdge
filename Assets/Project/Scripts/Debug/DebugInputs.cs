@@ -15,5 +15,10 @@ public class DebugInputs : MonoBehaviour
         {
             m_controller.TryStartWallClimb();
         }
+
+        if (Input.GetKey(KeyCode.V))
+        {
+            Debug.Break();
+        }
     }
 }

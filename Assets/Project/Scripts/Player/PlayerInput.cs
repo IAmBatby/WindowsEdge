@@ -101,9 +101,9 @@ public class PlayerInput : MonoBehaviour
 
     void RotateCamHead(float rot)
     {
-        var euler = m_camHead.eulerAngles;
+        var euler = m_camHead.localEulerAngles;
         euler.x = ClampAngle(euler.x - rot, -m_camClamp.y, -m_camClamp.x);
-        m_camHead.eulerAngles = euler;
+        m_camHead.localEulerAngles = euler;
     }
 
     public static float ClampAngle(float current, float min, float max)
@@ -136,13 +136,13 @@ public class PlayerInput : MonoBehaviour
                 }
             }
         }
-        if(m_controller.currentSpeed > m_minSpeedWallRunEngage)
-        {
-            if(m_controller.TryStartWallRun())
-            {
-                return;
-            }
-        }
+        //if(m_controller.currentSpeed > m_minSpeedWallRunEngage)
+        //{
+        //    if(m_controller.TryStartWallRun())
+        //    {
+        //        return;
+        //    }
+        //}
 
 
         m_controller.TryJump();

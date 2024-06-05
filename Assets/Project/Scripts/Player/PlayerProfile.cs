@@ -74,9 +74,11 @@ public class PlayerProfile : ScriptableObject
     [Header("WallRunning")]
     [SerializeField] float m_wallRunForce = 5.0f;
     [SerializeField] float m_wallRunTime = 1.0f;
+    [SerializeField] AnimationCurve m_wallRunGravityCurve = AnimationCurve.Linear(0.0f, 0.0f, 1.0f, 1.0f);
 
     public float wallRunForce { get { return m_wallRunForce; } set { m_wallRunForce = value; } }
     public float wallRunTime { get { return m_wallRunTime; } set { m_wallRunTime = value; } }
+    public AnimationCurve wallRunGravityCurve { get { return m_wallRunGravityCurve; } }
 
     [Header("WallJump")]
     [SerializeField, Range(0.0f, 1.0f)] float m_wallJumpAngleStrength = 0.5f;
