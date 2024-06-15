@@ -83,6 +83,9 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  m_initialVerticalVelocityFloor: 5
+  m_initialVerticalVelocityRoof: 5
+  m_wallVarienceCheck: 15
   m_wallJumpAngleStrength: 0.201
   m_wallJumpStrength: 1.3
   m_climbForce: 10

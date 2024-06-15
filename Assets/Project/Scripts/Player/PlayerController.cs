@@ -93,9 +93,10 @@ public class PlayerController : MonoBehaviour
     public bool frontWall { get { return m_frontWall; } }
 
     // Wall Interaction playability
-    int m_wallRunsLeft = 0;
-    public int wallRunsLeft { get { return m_wallRunsLeft; } }
     SimpleTimer m_wallInteractTimer = new SimpleTimer();
+    bool m_hasWallClimbed = false;
+    Vector3 m_lastWallNormal = Vector3.zero;
+    Collider m_lastWallCollider = null;
 
     // Inputs
     [Header("Inputs")]
@@ -299,7 +300,6 @@ public class PlayerController : MonoBehaviour
                     WallKick(wallNormal);
 
                     EnterState(PlayerState.Airborne);
-                    m_wallRunsLeft++;
                     break;
                 }
             case PlayerState.WallClimbing:
@@ -348,6 +348,8 @@ public class PlayerController : MonoBehaviour
                     ReorientSlope(m_velocity);
 
                     m_onGroundedEvent.Invoke();
+                    m_hasWallClimbed = false;
+                    m_lastWallNormal = Vector3.zero;
                     break;
                 }
             case PlayerState.Airborne:
@@ -631,7 +633,40 @@ public class PlayerController : MonoBehaviour
 
     bool StartWallRunCondition()
     {
-        return (m_wallLeft || m_wallRight);
+        bool hasWall = (m_wallLeft || m_wallRight);
+        if(!hasWall)
+        {
+            return false;
+        }
+
+        if(m_lastWallNormal.sqrMagnitude == 0.0f)
+        {
+            return true;
+        }
+
+        Vector3 wallNormal;
+        Collider collider;
+        if (m_wallRight)
+        {
+            wallNormal = m_rightWallhit.normal;
+            collider = m_rightWallhit.collider;
+        }
+        else
+        {
+            wallNormal = m_leftWallhit.normal;
+            collider = m_leftWallhit.collider;
+        }
+
+        float dot = Vector3.Dot(m_lastWallNormal, wallNormal);
+        float degree = Mathf.Acos(dot) * Mathf.Rad2Deg;
+
+        bool success = degree > m_settings.wallVarienceCheck || m_lastWallCollider != collider;
+
+        //if (success)
+        //{
+        //    Debug.Log("Different Wall");
+        //}
+        return success;
     }
 
     bool ContinueWallRunCondition()
@@ -643,19 +678,26 @@ public class PlayerController : MonoBehaviour
     {
         //this.fallingVelocity = 0.0f;
 
-        m_wallRunsLeft--;
-
         m_wallInteractTimer.completeTime = m_settings.wallRunTime;
         m_wallInteractTimer.Reset();
+
+        m_fallingVelocity = Mathf.Clamp(m_fallingVelocity, m_settings.initialVerticalVelocityFloor, m_settings.initialVerticalVelocityRoof);
     }
 
     private void WallRunningMovement()
     {
-        //var velocity = this.velocity;
-        //velocity.y = 0.0f;
-        //this.SetVelocity(velocity);
-
-        Vector3 wallNormal = m_wallRight ? m_rightWallhit.normal : m_leftWallhit.normal;
+        Vector3 wallNormal;
+        if(m_wallRight)
+        {
+            wallNormal = m_rightWallhit.normal;
+            m_lastWallCollider = m_rightWallhit.collider;
+        }
+        else
+        {
+            wallNormal = m_leftWallhit.normal;
+            m_lastWallCollider = m_leftWallhit.collider;
+        }
+        m_lastWallNormal = wallNormal;
 
         Vector3 wallForward = Vector3.Cross(wallNormal, transform.up);
 
@@ -684,7 +726,7 @@ public class PlayerController : MonoBehaviour
 
     public bool TryStartWallClimb ()
     {
-        if (m_currentState != PlayerState.WallClimbing)
+        if (m_currentState != PlayerState.WallClimbing && !m_hasWallClimbed)
         {
             if (StartWallClimbCondition())
             {
@@ -700,6 +742,8 @@ public class PlayerController : MonoBehaviour
     {
         m_wallInteractTimer.completeTime = m_settings.wallClimbTime;
         m_wallInteractTimer.Reset();
+
+        m_hasWallClimbed = true;
     }
 
     void StopWallClimb()
